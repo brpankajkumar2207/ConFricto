@@ -63,10 +63,8 @@ const callGrok = async (prompt: string): Promise<string> => {
     throw new Error("Grok API key is not configured.");
   }
 
-  const fullPrompt = "You are a helpful assistant. Always respond with valid JSON only. No markdown, no code blocks, no explanation.\n\n" + prompt;
-
   const response = await fetch(
-    "https://api.x.ai/v1/responses",
+    "https://api.x.ai/v1/chat/completions",
     {
       method: "POST",
       headers: {
@@ -74,21 +72,31 @@ const callGrok = async (prompt: string): Promise<string> => {
         "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "grok-4.20-reasoning",
-        input: fullPrompt,
+        model: "grok-beta",
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful assistant. Always respond with valid JSON only. No markdown, no code blocks, no explanation."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: 0.7
       }),
     }
   );
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
-    const msg = errorBody?.error || errorBody?.code || response.statusText;
+    const msg = errorBody?.error?.message || errorBody?.error || response.statusText;
     console.error("Grok API error:", response.status, msg);
     throw new Error(`Grok API error (${response.status}): ${msg}`);
   }
 
   const data = await response.json();
-  const textContent = data.output_text || data.output?.[0]?.content?.[0]?.text;
+  const textContent = data.choices?.[0]?.message?.content;
 
   if (!textContent) {
     throw new Error("No content received from Grok API.");
