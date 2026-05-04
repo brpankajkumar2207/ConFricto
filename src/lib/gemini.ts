@@ -56,7 +56,48 @@ export interface FinalPlan {
   groupVotesReceived?: number;
 }
 
-// --- Helper: call Gemini API ---
+// --- Helper: call Grok API (Primary) ---
+const callGrok = async (prompt: string): Promise<string> => {
+  const apiKey = import.meta.env.VITE_GROK_API_KEY;
+  if (!apiKey) {
+    throw new Error("Grok API key is not configured.");
+  }
+
+  const fullPrompt = "You are a helpful assistant. Always respond with valid JSON only. No markdown, no code blocks, no explanation.\n\n" + prompt;
+
+  const response = await fetch(
+    "https://api.x.ai/v1/responses",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "grok-4.20-reasoning",
+        input: fullPrompt,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    const msg = errorBody?.error || errorBody?.code || response.statusText;
+    console.error("Grok API error:", response.status, msg);
+    throw new Error(`Grok API error (${response.status}): ${msg}`);
+  }
+
+  const data = await response.json();
+  const textContent = data.output_text || data.output?.[0]?.content?.[0]?.text;
+
+  if (!textContent) {
+    throw new Error("No content received from Grok API.");
+  }
+
+  return textContent;
+};
+
+// --- Helper: call Gemini API (Fallback) ---
 const callGemini = async (prompt: string): Promise<string> => {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
@@ -68,7 +109,6 @@ const callGemini = async (prompt: string): Promise<string> => {
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     if (attempt > 0) {
-      // Exponential backoff: 8s, 20s, 40s
       const waitMs = Math.min(8000 * Math.pow(2, attempt), 40000);
       console.log(`Gemini API retry ${attempt}/${maxRetries}, waiting ${waitMs/1000}s...`);
       await new Promise(resolve => setTimeout(resolve, waitMs));
@@ -99,7 +139,7 @@ const callGemini = async (prompt: string): Promise<string> => {
       const msg = errorBody?.error?.message || "Rate limited";
       console.warn(`Gemini rate limited (attempt ${attempt + 1}/${maxRetries}):`, msg);
       lastError = new Error(msg);
-      continue; // Retry
+      continue;
     }
 
     if (!response.ok) {
@@ -120,6 +160,31 @@ const callGemini = async (prompt: string): Promise<string> => {
   }
 
   throw lastError || new Error("Gemini API failed after retries.");
+};
+
+// --- Orchestrator: Grok first → Gemini fallback ---
+const callAI = async (prompt: string): Promise<string> => {
+  const grokKey = import.meta.env.VITE_GROK_API_KEY;
+  
+  // Try Grok first if key is available
+  if (grokKey) {
+    try {
+      console.log("🟢 Attempting Grok API (primary)...");
+      const result = await callGrok(prompt);
+      console.log("✅ Grok API succeeded.");
+      return result;
+    } catch (grokError: any) {
+      console.warn("⚠️ Grok API failed, falling back to Gemini:", grokError.message);
+    }
+  } else {
+    console.log("⏭️ No Grok key configured, using Gemini directly.");
+  }
+
+  // Fallback to Gemini
+  console.log("🔵 Attempting Gemini API (fallback)...");
+  const result = await callGemini(prompt);
+  console.log("✅ Gemini API succeeded.");
+  return result;
 };
 
 
@@ -182,7 +247,7 @@ Format:
   }
 ]`;
 
-  const text = await callGemini(prompt);
+  const text = await callAI(prompt);
   try {
     return parseCleanJson(text) as GeneratedQuestion[];
   } catch (error) {
@@ -247,7 +312,7 @@ Format:
 Generate exactly 10 options.
 Rank them by how well they fit the group's collective responses — best fit first.`;
 
-  const text = await callGemini(prompt);
+  const text = await callAI(prompt);
   try {
     return parseCleanJson(text) as OutingPlan[];
   } catch (error) {
@@ -340,7 +405,7 @@ Each plan must have 3-5 stops in the itinerary.
 Order by rating — Perfect Match first.
 Make the plans feel like they were planned by a local friend who knows the city well — not a generic tourist guide.`;
 
-  const text = await callGemini(prompt);
+  const text = await callAI(prompt);
   try {
     return parseCleanJson(text) as FinalPlan[];
   } catch (error) {
