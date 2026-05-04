@@ -302,6 +302,12 @@ const CreateSession = () => {
             className="w-full skeuo-input mb-6 placeholder:text-zinc-400 min-h-[120px] resize-none text-zinc-800"
           />
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+          <label className="block font-black text-black uppercase tracking-widest mb-4">
+=======
+>>>>>>> 34c2844 (Update)
           <label className="block text-left text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 ml-2">
             Location/City
           </label>
@@ -314,6 +320,10 @@ const CreateSession = () => {
           />
 
           <label className="block text-left text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 ml-2">
+<<<<<<< HEAD
+=======
+>>>>>>> 030c452 (Update)
+>>>>>>> 34c2844 (Update)
             Squad Size
           </label>
           <input 
@@ -332,8 +342,18 @@ const CreateSession = () => {
 
           <button 
             onClick={handleCreate}
+<<<<<<< HEAD
             disabled={isLoading || !brief || !location || !size || !hostName}
             className="w-full skeuo-button-primary py-4 text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+=======
+<<<<<<< HEAD
+            disabled={isLoading || !brief || !size || !hostName}
+            className="w-full brutal-button-primary mt-4 py-4 flex items-center justify-between px-6 disabled:opacity-50"
+=======
+            disabled={isLoading || !brief || !location || !size || !hostName}
+            className="w-full skeuo-button-primary py-4 text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+>>>>>>> 030c452 (Update)
+>>>>>>> 34c2844 (Update)
           >
             <span>{isLoading ? 'CREATING...' : 'CREATE SESSION'}</span>
             <ArrowRight className="w-5 h-5" />
