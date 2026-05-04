@@ -220,7 +220,7 @@ const CreateSession = () => {
     } catch (err: any) {
       clearTimeout(timeoutId);
       console.error("Error creating room", err);
-      setError("Failed to create room.");
+      setError("Failed to create room: " + (err.message || "Unknown error"));
       setIsLoading(false);
     }
   };
