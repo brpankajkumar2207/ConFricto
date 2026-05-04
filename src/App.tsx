@@ -15,85 +15,56 @@ import {
 } from 'lucide-react';
 import ActiveSession from './ActiveSession';
 
-// --- Skeuomorphic Components ---
-
-const SkeuoCard = ({ children, className = "", onClick }: { children: React.ReactNode, className?: string, onClick?: () => void }) => (
-  <div 
-    onClick={onClick}
-    className={`skeuo-card p-8 ${onClick ? 'cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all' : ''} ${className}`}
-  >
-    {children}
-  </div>
-);
-
-const SkeuoBadge = ({ text = "Private Response" }: { text?: string }) => (
-  <div className="skeuo-inset flex items-center gap-2 w-fit mb-4 px-4 py-2 font-bold text-xs uppercase tracking-widest text-zinc-500 rounded-full">
-    <Lock className="w-3 h-3 text-pink-500" />
-    <span>{text}</span>
-  </div>
-);
-
 // --- Screen Components ---
 
 const LandingPage = () => {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Background Decorative Blobs */}
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-rose-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
-      
+    <div className="min-h-screen flex flex-col justify-center p-8 md:p-24 relative overflow-hidden">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        className="max-w-xl w-full z-10"
+        className="max-w-4xl w-full z-10"
       >
-        <div className="mb-16 text-center">
-          <motion.div 
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.5, type: "spring" }}
-            className="w-24 h-24 mx-auto mb-6 skeuo-card flex items-center justify-center rounded-full"
-          >
-            <Flame className="w-10 h-10 text-rose-500" />
-          </motion.div>
-          <h1 className="text-6xl md:text-8xl font-display font-extrabold text-zinc-800 mb-4 tracking-tight drop-shadow-md">
-            ConFricto
+        <div className="mb-16">
+          <h1 className="text-7xl md:text-[9rem] leading-[0.85] font-black text-black mb-8 tracking-tighter uppercase">
+            CON<br/>FRICTO
           </h1>
-          <p className="text-zinc-500 text-xl font-medium max-w-sm mx-auto">Navigate group friction effortlessly. Plan your outings with style.</p>
+          <div className="flex gap-6 items-center">
+             <div className="w-1.5 h-16 bg-[var(--color-brutal-pink)] flex-shrink-0"></div>
+             <p className="text-zinc-600 text-xl font-medium max-w-xl leading-relaxed">
+               Plan group outings without the social pressure. Honest voices only.
+             </p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <SkeuoCard onClick={() => navigate('/create')} className="flex flex-col items-center text-center gap-4 h-full relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-rose-100/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="w-16 h-16 skeuo-inset rounded-full flex items-center justify-center mb-2 z-10">
-              <MessageSquare className="text-rose-500 w-6 h-6" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl">
+          <div onClick={() => navigate('/create')} className="brutal-card p-10 flex flex-col cursor-pointer hover:-translate-y-1 transition-transform bg-white relative">
+            <div className="w-16 h-16 bg-black flex items-center justify-center mb-8 shadow-[6px_6px_0px_#FF00FF]">
+              <MessageSquare className="text-white w-8 h-8" />
             </div>
-            <div className="z-10">
-              <h3 className="text-2xl font-bold text-zinc-800 mb-2">New Session</h3>
-              <p className="text-zinc-500 text-sm font-medium leading-relaxed">Start an anonymous chat to decide where the group should go next.</p>
+            <h3 className="text-2xl font-black text-black mb-4 uppercase italic tracking-wide">New Session</h3>
+            <p className="text-zinc-700 text-sm font-medium leading-relaxed mb-12">Start an anonymous chat to decide where the group should go next.</p>
+            <div className="mt-auto font-black text-sm uppercase tracking-widest flex items-center gap-2">
+              Execute <ArrowRight className="w-4 h-4" />
             </div>
-            <div className="mt-auto pt-4 flex items-center text-rose-600 font-bold text-sm uppercase tracking-widest z-10">
-              Execute <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </SkeuoCard>
+          </div>
 
-          <SkeuoCard onClick={() => navigate('/join')} className="flex flex-col items-center text-center gap-4 h-full relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-zinc-100/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="w-16 h-16 skeuo-inset rounded-full flex items-center justify-center mb-2 z-10">
-              <Users className="text-zinc-500 w-6 h-6" />
+          <div onClick={() => navigate('/join')} className="brutal-card p-10 flex flex-col cursor-pointer hover:-translate-y-1 transition-transform bg-white relative">
+            <div className="w-16 h-16 bg-white border-4 border-black flex items-center justify-center mb-8">
+              <Users className="text-black w-8 h-8" />
             </div>
-            <div className="z-10">
-              <h3 className="text-2xl font-bold text-zinc-800 mb-2">Join Friends</h3>
-              <p className="text-zinc-500 text-sm font-medium leading-relaxed">Have an invite code? Join your friends and add your voice privately.</p>
+            <h3 className="text-2xl font-black text-black mb-4 uppercase italic tracking-wide">Join Friends</h3>
+            <p className="text-zinc-700 text-sm font-medium leading-relaxed mb-12">Have an invite code? Join your friends and add your voice privately.</p>
+            <div className="mt-auto font-black text-sm uppercase tracking-widest flex items-center gap-2">
+              Link up <ChevronRight className="w-4 h-4" />
             </div>
-            <div className="mt-auto pt-4 flex items-center text-zinc-600 font-bold text-sm uppercase tracking-widest z-10">
-              Link up <ChevronRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </SkeuoCard>
+          </div>
         </div>
       </motion.div>
+      
+
     </div>
   );
 };
@@ -111,7 +82,7 @@ const InviteEntry = () => {
     
     const timeoutId = setTimeout(() => {
       if (isLoading) {
-        setError("Connection timeout. Check your Firebase config.");
+        setError("Connection timeout.");
         setIsLoading(false);
       }
     }, 10000);
@@ -156,55 +127,56 @@ const InviteEntry = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center relative">
+    <div className="min-h-screen flex flex-col justify-center p-8 md:p-24 relative overflow-hidden">
       <button 
         onClick={() => navigate('/')}
-        className="absolute top-8 left-8 skeuo-button p-4 text-zinc-600 hover:text-zinc-900 rounded-full"
+        className="fixed top-8 left-8 w-12 h-12 brutal-card flex items-center justify-center hover:bg-[var(--color-brutal-yellow)] z-50"
       >
-        <ArrowLeft className="w-5 h-5" />
+        <ArrowLeft className="w-6 h-6" />
       </button>
+
       <motion.div 
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 1.1 }}
-        className="max-w-md w-full"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: 20 }}
+        className="max-w-xl w-full z-10"
       >
-        <div className="flex justify-center mb-8">
-          <div className="w-24 h-24 skeuo-card rounded-full flex items-center justify-center">
-            <ShieldCheck className="text-rose-500 w-10 h-10" />
+        <div className="mb-12">
+          <div className="w-16 h-16 bg-black flex items-center justify-center mb-8 shadow-[6px_6px_0px_#FF00FF]">
+            <Users className="text-white w-8 h-8" />
+          </div>
+          <h1 className="text-5xl md:text-7xl font-black text-black mb-6 tracking-tighter uppercase">
+            LINK UP
+          </h1>
+          <div className="flex gap-4 items-center">
+             <div className="w-1.5 h-12 bg-black flex-shrink-0"></div>
+             <p className="text-zinc-600 font-medium max-w-sm">No judgment. No pressure. Just pure consensus.</p>
           </div>
         </div>
-        
-        <div className="flex flex-col items-center mb-10">
-          <SkeuoBadge text="Stealth mode active" />
-          <h1 className="text-4xl font-display font-bold mb-4 text-zinc-800 tracking-tight">Gather Quietly</h1>
-          <p className="text-zinc-500 font-medium text-lg leading-tight">No judgment. No pressure.<br/>Just pure consensus.</p>
-        </div>
 
-        <SkeuoCard className="mb-6">
-          <label className="block text-left text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 ml-2">
+        <div className="brutal-card p-10 max-w-md">
+          <label className="block font-black text-black uppercase tracking-widest mb-4">
             Access Code
           </label>
           <input 
             type="text" 
             value={roomCode}
             onChange={(e) => setRoomCode(e.target.value)}
-            placeholder="Enter Room ID..." 
-            className="w-full skeuo-input mb-4 placeholder:text-zinc-400 uppercase text-center tracking-widest text-lg text-zinc-800"
+            placeholder="ENTER ROOM ID" 
+            className="w-full brutal-input mb-4 placeholder:text-zinc-400 uppercase tracking-widest font-bold"
             maxLength={6}
           />
-          {error && <p className="text-rose-600 font-bold text-sm mb-4">{error}</p>}
-          {!error && <div className="mb-4"></div>}
+          {error && <p className="text-[var(--color-brutal-pink)] font-bold text-sm mb-4 uppercase tracking-wider">{error}</p>}
 
           <button 
             onClick={handleJoin}
             disabled={isLoading || !roomCode}
-            className="w-full skeuo-button-primary py-4 text-lg flex items-center justify-center gap-3 disabled:opacity-50"
+            className="w-full brutal-button-primary mt-4 py-4 flex items-center justify-between px-6 disabled:opacity-50"
           >
-            <span>{isLoading ? 'JOINING...' : 'JOIN SESSION'}</span>
+            <span>{isLoading ? 'JOINING...' : 'ENTER'}</span>
             <ArrowRight className="w-5 h-5" />
           </button>
-        </SkeuoCard>
+        </div>
       </motion.div>
     </div>
   );
@@ -225,7 +197,7 @@ const CreateSession = () => {
     setError('');
 
     const timeoutId = setTimeout(() => {
-      setError("Connection timeout. Check your Firebase config.");
+      setError("Connection timeout.");
       setIsLoading(false);
     }, 10000);
 
@@ -248,71 +220,62 @@ const CreateSession = () => {
     } catch (err: any) {
       clearTimeout(timeoutId);
       console.error("Error creating room", err);
-      setError(err.message || "Failed to create room.");
+      setError("Failed to create room.");
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center relative">
+    <div className="min-h-screen flex flex-col justify-center p-8 md:p-24 relative overflow-hidden">
       <button 
         onClick={() => navigate('/')}
-        className="absolute top-8 left-8 skeuo-button p-4 text-zinc-600 hover:text-zinc-900 rounded-full"
+        className="fixed top-8 left-8 w-12 h-12 brutal-card flex items-center justify-center hover:bg-[var(--color-brutal-yellow)] z-50"
       >
-        <ArrowLeft className="w-5 h-5" />
+        <ArrowLeft className="w-6 h-6" />
       </button>
 
       <motion.div 
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -30 }}
-        className="max-w-xl w-full"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: 20 }}
+        className="max-w-2xl w-full z-10"
       >
-        <div className="flex justify-center mb-8">
-          <div className="w-24 h-24 skeuo-card rounded-full flex items-center justify-center">
-            <MessageSquare className="text-zinc-600 w-10 h-10" />
+        <div className="mb-12">
+          <div className="w-16 h-16 bg-black flex items-center justify-center mb-8 shadow-[6px_6px_0px_#FFD600]">
+            <MessageSquare className="text-white w-8 h-8" />
+          </div>
+          <h1 className="text-5xl md:text-7xl font-black text-black mb-6 tracking-tighter uppercase">
+            DEFINE<br/>MISSION
+          </h1>
+          <div className="flex gap-4 items-center">
+             <div className="w-1.5 h-12 bg-black flex-shrink-0"></div>
+             <p className="text-zinc-600 font-medium max-w-sm">What's the plan? Describe the vibe or occasion.</p>
           </div>
         </div>
-        
-        <div className="flex flex-col items-center mb-10">
-          <SkeuoBadge text="Session Initialization" />
-          <h1 className="text-4xl font-display font-bold mb-4 text-zinc-800 tracking-tight text-left w-full">Define the Mission</h1>
-          <p className="text-zinc-500 font-medium text-lg text-left w-full">What's the plan? Describe the vibe, the occasion, or the goal.</p>
-        </div>
 
-        <SkeuoCard className="mb-6">
-          <label className="block text-left text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 ml-2">
+        <div className="brutal-card p-10">
+          <label className="block font-black text-black uppercase tracking-widest mb-4">
             Host Name
           </label>
           <input 
             type="text" 
             value={hostName}
             onChange={(e) => setHostName(e.target.value)}
-            placeholder="Your name..." 
-            className="w-full skeuo-input mb-6 placeholder:text-zinc-400 text-zinc-800"
+            placeholder="ENTER YOUR NAME" 
+            className="w-full brutal-input mb-8 placeholder:text-zinc-400 font-bold"
           />
 
-          <label className="block text-left text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 ml-2">
+          <label className="block font-black text-black uppercase tracking-widest mb-4">
             The Brief
           </label>
           <textarea 
             value={brief}
             onChange={(e) => setBrief(e.target.value)}
-            placeholder="e.g., Saturday night drinks, casual dinner, or weekend getaway ideas..." 
-            className="w-full skeuo-input mb-6 placeholder:text-zinc-400 min-h-[120px] resize-none text-zinc-800"
+            placeholder="SATURDAY NIGHT DRINKS, WEEKEND GETAWAY..." 
+            className="w-full brutal-input mb-8 placeholder:text-zinc-400 min-h-[120px] resize-none font-bold uppercase"
           />
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
           <label className="block font-black text-black uppercase tracking-widest mb-4">
-=======
->>>>>>> 34c2844 (Update)
-          <label className="block text-left text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 ml-2">
-=======
-          <label className="block font-black text-black uppercase tracking-widest mb-4">
->>>>>>> 51fc1d9 (Backend)
             Location/City
           </label>
           <input 
@@ -323,15 +286,7 @@ const CreateSession = () => {
             className="w-full brutal-input mb-8 placeholder:text-zinc-400 font-bold uppercase"
           />
 
-<<<<<<< HEAD
-          <label className="block text-left text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 ml-2">
-<<<<<<< HEAD
-=======
->>>>>>> 030c452 (Update)
->>>>>>> 34c2844 (Update)
-=======
           <label className="block font-black text-black uppercase tracking-widest mb-4">
->>>>>>> 51fc1d9 (Backend)
             Squad Size
           </label>
           <input 
@@ -339,39 +294,24 @@ const CreateSession = () => {
             min="2"
             value={size}
             onChange={(e) => setSize(e.target.value)}
-            placeholder="Total number of people (including you)..." 
-            className="w-full skeuo-input mb-6 placeholder:text-zinc-400 text-zinc-800"
+            placeholder="TOTAL PEOPLE" 
+            className="w-full brutal-input mb-8 placeholder:text-zinc-400 font-bold"
             onKeyDown={(e) => {
               if (e.key === '-' || e.key === '.' || e.key === 'e') e.preventDefault();
             }}
           />
 
-          {error && <p className="text-rose-600 font-bold text-sm mb-4 text-left">{error}</p>}
+          {error && <p className="text-[var(--color-brutal-pink)] font-bold text-sm mb-4 uppercase tracking-wider">{error}</p>}
 
           <button 
             onClick={handleCreate}
-<<<<<<< HEAD
-<<<<<<< HEAD
-            disabled={isLoading || !brief || !location || !size || !hostName}
-            className="w-full skeuo-button-primary py-4 text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-=======
-<<<<<<< HEAD
-            disabled={isLoading || !brief || !size || !hostName}
-            className="w-full brutal-button-primary mt-4 py-4 flex items-center justify-between px-6 disabled:opacity-50"
-=======
-            disabled={isLoading || !brief || !location || !size || !hostName}
-            className="w-full skeuo-button-primary py-4 text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
->>>>>>> 030c452 (Update)
->>>>>>> 34c2844 (Update)
-=======
             disabled={isLoading || !brief || !location || !size || !hostName}
             className="w-full brutal-button-primary mt-4 py-4 flex items-center justify-between px-6 disabled:opacity-50"
->>>>>>> 51fc1d9 (Backend)
           >
-            <span>{isLoading ? 'CREATING...' : 'CREATE SESSION'}</span>
+            <span>{isLoading ? 'CREATING...' : 'INITIALIZE'}</span>
             <ArrowRight className="w-5 h-5" />
           </button>
-        </SkeuoCard>
+        </div>
       </motion.div>
     </div>
   );
@@ -418,8 +358,9 @@ const WaitingRoom = () => {
   if (error) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
-        <h1 className="text-3xl font-display font-bold text-rose-600 mb-6">{error}</h1>
-        <button onClick={() => navigate('/')} className="skeuo-button py-3 px-8 text-zinc-600">RETURN HOME</button>
+        <h1 className="text-5xl font-black text-black mb-6 uppercase">ERROR</h1>
+        <p className="text-[var(--color-brutal-pink)] font-bold tracking-widest mb-8">{error}</p>
+        <button onClick={() => navigate('/')} className="brutal-button py-3 px-8 text-black">ABORT</button>
       </div>
     );
   }
@@ -427,68 +368,55 @@ const WaitingRoom = () => {
   if (!roomData) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-16 h-16 skeuo-inset rounded-full flex items-center justify-center animate-pulse">
-           <div className="w-8 h-8 bg-zinc-300 rounded-full"></div>
+        <div className="w-16 h-16 brutal-card flex items-center justify-center animate-pulse">
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
-      {/* Dynamic Background */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
-         <motion.div 
-            animate={{ rotate: 360 }} 
-            transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-            className="absolute top-[-20%] right-[-10%] w-96 h-96 bg-emerald-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40"
-         />
-         <motion.div 
-            animate={{ rotate: -360 }} 
-            transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
-            className="absolute bottom-[-20%] left-[-10%] w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40"
-         />
-      </div>
-
+    <div className="min-h-screen flex flex-col justify-center items-center p-8 relative overflow-hidden">
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="max-w-md w-full z-10"
+        className="max-w-xl w-full z-10 flex flex-col items-center"
       >
-        <div className="flex flex-col items-center mb-8">
-          <SkeuoBadge text="ConFricto Wait Area" />
-          <h1 className="text-4xl font-display font-bold text-zinc-800 tracking-tight mt-2">Ready to align?</h1>
-          <p className="text-zinc-500 mt-2">Gather your group and let the magic happen.</p>
+        <div className="mb-12 text-center">
+          <h1 className="text-5xl md:text-7xl font-black text-black mb-6 tracking-tighter uppercase">
+            WAIT AREA
+          </h1>
+          <p className="text-zinc-600 font-medium">Gathering signals from the network.</p>
         </div>
         
-        <SkeuoCard className="mb-8 text-center p-10 flex flex-col items-center relative">
-           <p className="text-xs font-bold text-zinc-400 mb-4 uppercase tracking-widest">Share this code with your friends</p>
-           <div className="skeuo-inset py-6 px-10 w-full flex items-center justify-center relative overflow-hidden group cursor-pointer hover:bg-zinc-200/50 transition-colors">
-              <h1 className="text-5xl font-display font-black tracking-[0.3em] text-rose-500 font-mono z-10 drop-shadow-sm">
+        <div className="brutal-card p-10 w-full mb-8 text-center relative overflow-hidden group">
+           <div className="absolute top-0 left-0 w-full h-4 bg-[var(--color-brutal-pink)]"></div>
+           <p className="font-black text-black mb-4 uppercase tracking-widest mt-4">Broadcast ID</p>
+           <div className="brutal-inset py-8 px-10 w-full bg-white flex items-center justify-center">
+              <h1 className="text-6xl md:text-8xl font-black tracking-widest text-black">
                 {roomCode}
               </h1>
            </div>
-        </SkeuoCard>
+        </div>
         
-        <div className="skeuo-inset p-6 mb-8 flex flex-col items-center">
-          <h2 className="text-sm font-bold text-zinc-500 mb-3 uppercase tracking-widest">Live Status</h2>
-          <div className="flex gap-2">
+        <div className="brutal-card w-full p-8 mb-8">
+          <h2 className="font-black text-black mb-6 uppercase tracking-widest text-center border-b-4 border-black pb-4">Live Status</h2>
+          <div className="flex flex-wrap gap-4 justify-center">
             {[...Array(roomData.totalMembers)].map((_, i) => (
-               <div key={i} className={`w-12 h-12 rounded-full flex items-center justify-center ${i < roomData.joinedMembers.length ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-inner' : 'skeuo-card opacity-50'}`}>
-                 <Users className={`w-5 h-5 ${i < roomData.joinedMembers.length ? 'text-white' : 'text-zinc-400'}`} />
+               <div key={i} className={`w-14 h-14 border-4 border-black flex items-center justify-center shadow-[4px_4px_0px_black] ${i < roomData.joinedMembers.length ? 'bg-[var(--color-brutal-yellow)]' : 'bg-white opacity-40'}`}>
+                 <Users className="w-6 h-6 text-black" />
                </div>
             ))}
           </div>
-          <p className="mt-4 text-zinc-600 font-medium">{roomData.joinedMembers.length} of {roomData.totalMembers} people have joined</p>
+          <p className="mt-8 text-black font-black uppercase tracking-widest text-center">{roomData.joinedMembers.length} OF {roomData.totalMembers} SECURED</p>
         </div>
 
         {isHost && (
           <button 
             onClick={handleStartSession}
             disabled={roomData.joinedMembers.length < 2}
-            className="w-full skeuo-button-primary py-5 text-xl flex items-center justify-center gap-3 disabled:opacity-50 disabled:grayscale transition-all"
+            className="w-full brutal-button-primary py-5 text-xl flex items-center justify-between px-8 disabled:opacity-50 disabled:grayscale transition-all"
           >
-            <span>START SESSION</span>
+            <span>START PROTOCOL</span>
             <ArrowRight className="w-6 h-6" />
           </button>
         )}
