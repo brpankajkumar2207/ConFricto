@@ -47,9 +47,13 @@ const SkeuoLayout = ({ children, roomCode }: { children: React.ReactNode, roomCo
 
 // --- Screen 1: Room Entrance ---
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 <<<<<<< HEAD
 const EntranceScreen = ({ onNext, roomCode, joinedCount }: { onNext: () => void, roomCode: string, joinedCount: number }) => (
+=======
+const EntranceScreen = ({ onNext, roomCode, joinedCount, isGenerating }: { onNext: () => void, roomCode: string, joinedCount: number, isGenerating: boolean }) => (
+>>>>>>> 51fc1d9 (Backend)
   <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="w-full flex flex-col justify-center md:px-12">
     <div className="mb-12">
       <div className="w-16 h-16 bg-black flex items-center justify-center mb-8 shadow-[6px_6px_0px_#FFD600]">
@@ -62,6 +66,7 @@ const EntranceScreen = ({ onNext, roomCode, joinedCount }: { onNext: () => void,
          <div className="w-1.5 h-12 bg-black flex-shrink-0"></div>
          <p className="text-zinc-600 font-medium max-w-sm">The squad is assembled. Time to feed your preferences into the protocol.</p>
       </div>
+<<<<<<< HEAD
 =======
 >>>>>>> 34c2844 (Update)
 const EntranceScreen = ({ onNext, roomCode, joinedCount, isGenerating }: { onNext: () => void, roomCode: string, joinedCount: number, isGenerating: boolean }) => (
@@ -72,6 +77,8 @@ const EntranceScreen = ({ onNext, roomCode, joinedCount, isGenerating }: { onNex
 =======
 >>>>>>> 030c452 (Update)
 >>>>>>> 34c2844 (Update)
+=======
+>>>>>>> 51fc1d9 (Backend)
     </div>
     <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tight mb-8 text-zinc-800">Ready to resolve the friction?</h1>
     
@@ -91,6 +98,7 @@ const EntranceScreen = ({ onNext, roomCode, joinedCount, isGenerating }: { onNex
       <p className="text-zinc-500 font-medium mb-10">{joinedCount} members synced up.</p>
       
 <<<<<<< HEAD
+<<<<<<< HEAD
       <button onClick={onNext} disabled={isGenerating} className="w-full skeuo-button-primary py-4 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed">
         <span>{isGenerating ? "GENERATING QUESTIONS..." : "ENTER QUESTIONNAIRE"}</span>
         {!isGenerating && <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />}
@@ -105,6 +113,11 @@ const EntranceScreen = ({ onNext, roomCode, joinedCount, isGenerating }: { onNex
         {!isGenerating && <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />}
 >>>>>>> 030c452 (Update)
 >>>>>>> 34c2844 (Update)
+=======
+      <button onClick={onNext} disabled={isGenerating} className="w-full brutal-button-primary py-4 flex items-center justify-between px-6 group disabled:opacity-50">
+        <span>{isGenerating ? "GENERATING..." : "BEGIN PROTOCOL"}</span>
+        {!isGenerating && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
+>>>>>>> 51fc1d9 (Backend)
       </button>
     </SkeuoCard>
   </motion.div>
@@ -198,25 +211,28 @@ const QuestionnaireScreen = ({ onComplete, questions, roomCode }: { onComplete: 
           className="w-full"
         >
 <<<<<<< HEAD
+<<<<<<< HEAD
           <SkeuoCard className="p-10">
             <h2 className="text-3xl font-display font-bold tracking-tight mb-8 text-zinc-800">
               {currentQ.question || currentQ.title}
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> 51fc1d9 (Backend)
           <BrutalCard className="p-10">
             <h2 className="text-4xl font-black uppercase tracking-tight mb-12 text-black">
-              {currentQ.title}
-=======
-          <SkeuoCard className="p-10">
-            <h2 className="text-3xl font-display font-bold tracking-tight mb-8 text-zinc-800">
               {currentQ.question || currentQ.title}
+<<<<<<< HEAD
 >>>>>>> 030c452 (Update)
 >>>>>>> 34c2844 (Update)
+=======
+>>>>>>> 51fc1d9 (Backend)
             </h2>
 
             <div className="flex flex-col gap-4">
               {currentQ.options.map((opt: string, i: number) => (
                 <button 
+<<<<<<< HEAD
 <<<<<<< HEAD
                   key={i}
                   onClick={() => handleAnswer(opt)}
@@ -254,20 +270,24 @@ const QuestionnaireScreen = ({ onComplete, questions, roomCode }: { onComplete: 
             )}
           </BrutalCard>
 =======
+=======
+>>>>>>> 51fc1d9 (Backend)
                   key={i}
                   onClick={() => handleAnswer(opt)}
-                  className="w-full text-left skeuo-button px-6 py-5 flex items-center justify-between group"
+                  className="w-full text-left brutal-button px-8 py-6 flex items-center justify-between group bg-white hover:bg-[var(--color-brutal-yellow)]"
                 >
-                  <span className="text-lg font-bold text-zinc-700">{opt}</span>
-                  <div className="w-8 h-8 rounded-full skeuo-inset flex items-center justify-center opacity-50 group-hover:opacity-100 transition-opacity">
-                    <ChevronRight className="w-4 h-4 text-rose-500" />
-                  </div>
+                  <span className="text-xl font-black text-black uppercase tracking-wide">{opt}</span>
+                  <ChevronRight className="w-6 h-6 text-black group-hover:translate-x-2 transition-transform" />
                 </button>
               ))}
             </div>
+<<<<<<< HEAD
           </SkeuoCard>
 >>>>>>> 030c452 (Update)
 >>>>>>> 34c2844 (Update)
+=======
+          </BrutalCard>
+>>>>>>> 51fc1d9 (Backend)
         </motion.div>
       </AnimatePresence>
     </motion.div>
@@ -345,15 +365,19 @@ const ProposalsScreen = ({ plans, onSubmitVotes, roomCode }: { plans: OutingPlan
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full">
 <<<<<<< HEAD
+<<<<<<< HEAD
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
 =======
 <<<<<<< HEAD
+=======
+>>>>>>> 51fc1d9 (Backend)
       <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6 border-b-8 border-black pb-8">
 >>>>>>> 34c2844 (Update)
         <div>
           <h2 className="text-4xl font-display font-bold tracking-tight text-zinc-800">Pick Your Favorites</h2>
           <p className="text-zinc-500 mt-2">Vote for up to 3 plans that excite you most.</p>
         </div>
+<<<<<<< HEAD
         <div className="skeuo-inset rounded-full px-6 py-2 font-bold text-zinc-500 tracking-widest uppercase text-sm">
           {selectedIds.length}/3 Selected
         </div>
@@ -425,46 +449,54 @@ const ProposalsScreen = ({ plans, onSubmitVotes, roomCode }: { plans: OutingPlan
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+=======
+        <div className="brutal-inset bg-black text-white px-6 py-3 font-black tracking-widest uppercase text-lg">
+          {selectedIds.length}/3 SELECTED
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
+>>>>>>> 51fc1d9 (Backend)
         {plans.map((plan) => {
           const isSelected = selectedIds.includes(plan.id);
           return (
-            <div
-              key={plan.id}
+            <BrutalCard 
+              key={plan.id} 
               onClick={() => toggleVote(plan.id)}
-              className={`skeuo-card p-6 cursor-pointer transition-all duration-200 ${isSelected ? 'ring-2 ring-rose-500 scale-[1.02]' : 'hover:scale-[1.01]'}`}
+              className={`relative overflow-hidden group flex flex-col h-full bg-white border-4 ${isSelected ? 'border-[var(--color-brutal-pink)] shadow-[8px_8px_0px_var(--color-brutal-pink)]' : 'border-black'}`}
             >
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${isSelected ? 'bg-rose-500 text-white' : 'skeuo-inset text-zinc-600'}`}>
-                    {isSelected ? <CheckCircle className="w-5 h-5" /> : plan.id}
->>>>>>> 030c452 (Update)
+              <div className="flex justify-between items-start mb-8 border-b-4 border-black pb-8">
+                <div className={`w-16 h-16 border-4 border-black ${isSelected ? 'bg-[var(--color-brutal-pink)] text-white' : 'bg-[var(--color-brutal-yellow)] text-black'} flex items-center justify-center font-black text-3xl shadow-[4px_4px_0px_black]`}>
+                  {isSelected ? <CheckCircle className="w-8 h-8" /> : plan.id}
+                </div>
+                <div className="text-right">
+                  <div className={`text-5xl font-black ${plan.groupFitScore >= 90 ? 'text-emerald-500' : plan.groupFitScore >= 75 ? 'text-amber-500' : 'text-black'}`}>
+                    {plan.groupFitScore}%
                   </div>
-                  <h3 className="text-lg font-bold text-zinc-800">{plan.title}</h3>
-                </div>
-                <div className={`text-xl font-black ${plan.groupFitScore >= 90 ? 'text-emerald-500' : plan.groupFitScore >= 75 ? 'text-amber-500' : 'text-zinc-400'}`}>
-                  {plan.groupFitScore}%
+                  <div className="text-sm font-black uppercase tracking-widest">Match</div>
                 </div>
               </div>
-              <p className="text-zinc-600 text-sm mb-3">{plan.vibe}</p>
-              <div className="flex flex-wrap gap-2 mb-3">
-                <span className="text-xs font-bold skeuo-inset px-3 py-1 rounded-full text-zinc-500">{plan.estimatedCost}</span>
-                <span className="text-xs font-bold skeuo-inset px-3 py-1 rounded-full text-zinc-500">{plan.duration}</span>
-                <span className="text-xs font-bold skeuo-inset px-3 py-1 rounded-full text-zinc-500">{plan.energyLevel}</span>
+              
+              <h3 className="text-3xl font-black text-black mb-4 uppercase tracking-wide">{plan.title}</h3>
+              <p className="text-zinc-600 font-bold mb-6 uppercase tracking-tight">{plan.vibe}</p>
+              
+              <div className="flex flex-wrap gap-2 mb-8">
+                <span className="bg-black text-white px-3 py-1 font-black text-xs uppercase">{plan.estimatedCost}</span>
+                <span className="bg-black text-white px-3 py-1 font-black text-xs uppercase">{plan.duration}</span>
+                <span className="bg-black text-white px-3 py-1 font-black text-xs uppercase">{plan.energyLevel}</span>
               </div>
-              <p className="text-xs text-zinc-400 italic">{plan.bestFor}</p>
-            </div>
+              
+              <p className="text-sm font-black text-zinc-500 italic uppercase mb-8">{plan.bestFor}</p>
+
+              <button className={`w-full brutal-button py-5 font-black uppercase tracking-widest ${isSelected ? 'bg-black text-white' : 'bg-white text-black hover:bg-[var(--color-brutal-pink)] hover:text-white'}`}>
+                {isSelected ? "SELECTED" : `VOTE PLAN ${plan.id}`}
+              </button>
+            </BrutalCard>
           );
         })}
       </div>
-
-<<<<<<< HEAD
-            <button className="w-full brutal-button bg-black text-white py-5 font-black uppercase tracking-widest hover:bg-[var(--color-brutal-pink)]">
-              VOTE PLAN {plan.id}
-            </button>
-          </BrutalCard>
-        ))}
-      </div>
       
+<<<<<<< HEAD
       <div className="mt-16 flex justify-center">
         <button onClick={onNext} className="brutal-button-primary py-6 px-16 font-black tracking-widest uppercase text-2xl flex items-center gap-4">
           <span>LOCK IN</span>
@@ -473,33 +505,39 @@ const ProposalsScreen = ({ plans, onSubmitVotes, roomCode }: { plans: OutingPlan
       </div>
 =======
 >>>>>>> 34c2844 (Update)
+=======
+>>>>>>> 51fc1d9 (Backend)
       {!submitted && (
-        <div className="flex justify-center">
-          <button
-            onClick={handleSubmit}
+        <div className="mt-16 flex justify-center">
+          <button 
+            onClick={handleSubmit} 
             disabled={selectedIds.length === 0}
-            className="skeuo-button-primary py-4 px-12 font-bold tracking-widest uppercase text-lg disabled:opacity-50"
+            className="brutal-button-primary py-6 px-16 font-black tracking-widest uppercase text-2xl flex items-center gap-4 disabled:opacity-50"
           >
-            Submit Votes ({selectedIds.length})
+            <span>LOCK IN ({selectedIds.length})</span>
+            <ArrowRight className="w-8 h-8" />
           </button>
         </div>
       )}
       {submitted && (
         <div className="text-center">
-          <p className="text-zinc-500 font-medium">Votes submitted! Generating final plans...</p>
+          <p className="text-black font-black uppercase tracking-widest text-xl">PROXIMITY SYNC IN PROGRESS... ANALYZING CONSENSUS.</p>
         </div>
       )}
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 >>>>>>> 030c452 (Update)
 >>>>>>> 34c2844 (Update)
+=======
+>>>>>>> 51fc1d9 (Backend)
     </motion.div>
   );
 };
 
-// --- Screen 5: Final Consensus ---
 // --- Screen 5: Final Plans ---
 const FinalPlansScreen = ({ finalPlans }: { finalPlans: FinalPlan[] }) => {
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
   const navigate = useNavigate();
@@ -513,41 +551,61 @@ const FinalPlansScreen = ({ finalPlans }: { finalPlans: FinalPlan[] }) => {
     if (rating === "Great Choice") return "bg-blue-100 text-blue-700";
     return "bg-amber-100 text-amber-700";
   };
+=======
+  const [revealed, setRevealed] = useState(false);
+>>>>>>> 51fc1d9 (Backend)
 
   return (
-<<<<<<< HEAD
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-3xl mx-auto flex flex-col items-center">
-      <div className="text-center mb-16">
-        <div className="w-32 h-32 mx-auto bg-black border-4 border-white shadow-[10px_10px_0px_#FF00FF] flex items-center justify-center mb-8 transform rotate-3">
-          <CheckCircle className="w-16 h-16 text-white" />
-        </div>
-        <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-black uppercase">CONSENSUS<br/>REACHED</h2>
-      </div>
-
-      <div className="w-full space-y-8">
-        <BrutalCard onClick={onNext} className="bg-[var(--color-brutal-yellow)] border-4 border-black flex flex-col md:flex-row gap-8 justify-between items-center cursor-pointer hover:bg-[#FFE033]">
-          <div className="flex gap-8 items-center w-full">
-            <div className="w-20 h-20 bg-white border-4 border-black flex items-center justify-center font-black text-4xl text-black shadow-[4px_4px_0px_black]">1</div>
-            <div className="flex-1">
-              <div className="flex gap-2 mb-2">
-                <span className="bg-black text-white text-xs font-black px-4 py-2 uppercase tracking-widest border-2 border-transparent">WINNER</span>
-              </div>
-              <h3 className="text-4xl font-black text-black uppercase tracking-tight">The Urban Sunset</h3>
+      {!revealed ? (
+        <>
+          <div className="text-center mb-16">
+            <div className="w-32 h-32 mx-auto bg-black border-4 border-white shadow-[10px_10px_0px_#FF00FF] flex items-center justify-center mb-8 transform rotate-3">
+              <CheckCircle className="w-16 h-16 text-white" />
             </div>
-            <div className="hidden md:flex flex-col items-end gap-2">
-              <div className="text-black font-black uppercase tracking-widest">100% SECURED</div>
-              <ArrowRight className="w-8 h-8" />
-            </div>
+            <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-black uppercase">CONSENSUS<br/>REACHED</h2>
           </div>
-        </BrutalCard>
-      </div>
+
+          <div className="w-full space-y-8">
+            {finalPlans.map((plan, idx) => (
+              <BrutalCard 
+                key={plan.id}
+                onClick={() => setRevealed(true)} 
+                className={`${idx === 0 ? 'bg-[var(--color-brutal-yellow)]' : 'bg-white'} border-4 border-black flex flex-col md:flex-row gap-8 justify-between items-center cursor-pointer hover:translate-y-[-4px] transition-transform`}
+              >
+                <div className="flex gap-8 items-center w-full">
+                  <div className="w-20 h-20 bg-white border-4 border-black flex items-center justify-center font-black text-4xl text-black shadow-[4px_4px_0px_black]">{idx + 1}</div>
+                  <div className="flex-1">
+                    <div className="flex gap-2 mb-2">
+                      <span className="bg-black text-white text-xs font-black px-4 py-2 uppercase tracking-widest border-2 border-transparent">
+                        {plan.rating === "Perfect Match" ? "WINNER" : plan.rating.toUpperCase()}
+                      </span>
+                    </div>
+                    <h3 className="text-4xl font-black text-black uppercase tracking-tight">{plan.title}</h3>
+                  </div>
+                  <div className="hidden md:flex flex-col items-end gap-2">
+                    <div className="text-black font-black uppercase tracking-widest">{plan.ratingScore}% SECURED</div>
+                    <ArrowRight className="w-8 h-8" />
+                  </div>
+                </div>
+              </BrutalCard>
+            ))}
+          </div>
+        </>
+      ) : (
+        <LockedPlanScreen plan={finalPlans[0]} />
+      )}
     </motion.div>
   );
 };
 
 // --- Screen 6: The Locked Plan ---
+<<<<<<< HEAD
 const LockedPlanScreen = () => {
 >>>>>>> 34c2844 (Update)
+=======
+const LockedPlanScreen = ({ plan }: { plan: FinalPlan }) => {
+>>>>>>> 51fc1d9 (Backend)
   const navigate = useNavigate();
   const ratingColor = (rating: string) => {
     if (rating === "Perfect Match") return "text-emerald-500";
@@ -561,15 +619,54 @@ const LockedPlanScreen = () => {
   };
 
   return (
+<<<<<<< HEAD
     <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-3xl mx-auto">
       <div className="text-center mb-12">
         <div className="w-24 h-24 mx-auto skeuo-card rounded-full flex items-center justify-center mb-6">
           <CheckCircle className="w-12 h-12 text-emerald-500" />
+=======
+    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="w-full max-w-4xl mx-auto pb-12">
+      <div className="flex justify-between items-end mb-12 border-b-8 border-black pb-8">
+         <div>
+            <h1 className="text-6xl md:text-8xl font-black text-black uppercase tracking-tighter mb-4">LOCKED IN</h1>
+            <p className="text-zinc-600 font-bold tracking-widest uppercase">YOUR GROUP'S IDEAL OUTING</p>
+         </div>
+      </div>
+      
+      <BrutalCard className="p-12 mb-12 text-center bg-black text-white transform -rotate-1 relative shadow-[12px_12px_0px_#FFD600]">
+        <div className="absolute top-4 left-4 w-4 h-4 bg-white rounded-full"></div>
+        <div className="absolute top-4 right-4 w-4 h-4 bg-white rounded-full"></div>
+        <h2 className="text-5xl md:text-7xl font-black tracking-tight mb-4 uppercase mt-8">{plan.title}</h2>
+        <p className="text-[var(--color-brutal-yellow)] font-black uppercase tracking-widest text-xl">{plan.tagline || plan.vibe}</p>
+      </BrutalCard>
+      
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+        <div className="bg-white border-4 border-black p-6 flex flex-col gap-4 items-center text-center shadow-[4px_4px_0px_black]">
+          <div className="w-12 h-12 bg-black flex items-center justify-center"><CheckCircle className="w-6 h-6 text-[#FF00FF]" /></div>
+          <div className="font-black text-xs uppercase tracking-widest text-zinc-500">Match</div>
+          <div className="font-black text-xl text-black uppercase">{plan.ratingScore}%</div>
+        </div>
+        <div className="bg-white border-4 border-black p-6 flex flex-col gap-4 items-center text-center shadow-[4px_4px_0px_black]">
+          <div className="w-12 h-12 bg-black flex items-center justify-center"><Clock className="w-6 h-6 text-[#FFD600]" /></div>
+          <div className="font-black text-xs uppercase tracking-widest text-zinc-500">Duration</div>
+          <div className="font-black text-xl text-black uppercase">{plan.totalDuration || plan.duration}</div>
+        </div>
+        <div className="bg-white border-4 border-black p-6 flex flex-col gap-4 items-center text-center shadow-[4px_4px_0px_black]">
+          <div className="w-12 h-12 bg-black flex items-center justify-center"><Users className="w-6 h-6 text-white" /></div>
+          <div className="font-black text-xs uppercase tracking-widest text-zinc-500">Consensus</div>
+          <div className="font-black text-xl text-black uppercase">{plan.groupVotePercentage}</div>
+        </div>
+        <div className="bg-white border-4 border-black p-6 flex flex-col gap-4 items-center text-center shadow-[4px_4px_0px_black]">
+          <div className="w-12 h-12 bg-black flex items-center justify-center"><span className="font-black text-white text-xl">₹</span></div>
+          <div className="font-black text-xs uppercase tracking-widest text-zinc-500">Cost</div>
+          <div className="font-black text-md text-black uppercase">{plan.totalEstimatedCost || plan.estimatedCost}</div>
+>>>>>>> 51fc1d9 (Backend)
         </div>
         <h2 className="text-5xl font-display font-bold tracking-tight text-zinc-800">Consensus Reached</h2>
         <p className="text-zinc-500 mt-3 text-lg">Here are your group's best-fit plans.</p>
       </div>
 
+<<<<<<< HEAD
       <div className="space-y-8 mb-12">
         {finalPlans.map((plan, idx) => (
           <SkeuoCard key={plan.id} className="p-8 relative overflow-hidden">
@@ -620,12 +717,40 @@ const LockedPlanScreen = () => {
           </SkeuoCard>
         ))}
       </div>
+=======
+      <BrutalCard className="p-12 mb-16 bg-white">
+        <h3 className="font-black text-black tracking-widest uppercase mb-10 border-b-4 border-black pb-4 text-3xl">MASTER PLAN</h3>
+        
+        <div className="space-y-12">
+          {(plan.itinerary || []).map((item, i) => (
+            <div key={i} className="flex flex-col md:flex-row gap-8 items-start">
+              <div className="w-16 h-16 bg-black flex items-center justify-center font-black text-3xl text-white flex-shrink-0 shadow-[4px_4px_0px_#FF00FF]">{item.stopNumber}</div>
+              <div className="flex-1 bg-white border-4 border-black p-6 shadow-[6px_6px_0px_black]">
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
+                  <h4 className="font-black text-2xl text-black uppercase">{item.placeName}</h4>
+                  <span className="font-black text-sm text-black bg-[var(--color-brutal-yellow)] px-4 py-2 border-2 border-black">{item.time}</span>
+                </div>
+                <div className="text-zinc-500 font-black text-xs uppercase tracking-widest mb-4">{item.placeType} // {item.area}</div>
+                <p className="text-black font-bold uppercase text-sm tracking-wide mb-4">{item.whatToDo}</p>
+                {item.whatToOrder && (
+                  <div className="bg-black text-white px-4 py-2 inline-block font-black text-xs uppercase tracking-widest">TRY: {item.whatToOrder}</div>
+                )}
+              </div>
+            </div>
+          ))}
+          {(!plan.itinerary || plan.itinerary.length === 0) && (
+            <p className="text-zinc-400 font-black uppercase tracking-widest text-center py-12 border-4 border-dashed border-zinc-200">Expansion pending: Itinerary generation in progress.</p>
+          )}
+        </div>
+      </BrutalCard>
+>>>>>>> 51fc1d9 (Backend)
 
       <div className="flex flex-col sm:flex-row gap-6 justify-center">
 <<<<<<< HEAD
         <button onClick={() => navigate('/')} className="skeuo-button-primary py-5 px-10">Finish</button>
 =======
         <button className="brutal-button-primary py-6 px-12 text-xl">DISTRIBUTE SECURELY</button>
+<<<<<<< HEAD
         <button onClick={() => navigate('/')} className="brutal-button py-6 px-12 text-xl bg-white hover:bg-zinc-200">TERMINATE SESSION</button>
 =======
     <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-3xl mx-auto">
@@ -692,6 +817,9 @@ const LockedPlanScreen = () => {
         <button onClick={() => navigate('/')} className="skeuo-button-primary py-5 px-10">Finish</button>
 >>>>>>> 030c452 (Update)
 >>>>>>> 34c2844 (Update)
+=======
+        <button onClick={() => navigate('/')} className="brutal-button py-6 px-12 text-xl bg-white hover:bg-zinc-200 border-4 border-black shadow-[8px_8px_0px_black]">TERMINATE SESSION</button>
+>>>>>>> 51fc1d9 (Backend)
       </div>
     </motion.div>
   );
@@ -709,10 +837,24 @@ export default function ActiveSession() {
   useEffect(() => {
     if (!roomCode) return;
     const unsubscribe = onSnapshot(doc(db, 'rooms', roomCode), (snap) => {
-      if (snap.exists()) setRoomData(snap.data());
+      if (snap.exists()) {
+        const data = snap.data();
+        setRoomData(data);
+        
+        // Auto-sync steps for all members
+        if (data.status === 'revealed' && data.finalPlans) {
+          setStep(4);
+        } else if (data.outingPlans && data.outingPlans.length > 0 && step < 3) {
+          setStep(3);
+        } else if (data.questions && data.questions.length > 0 && step < 1) {
+          setStep(1);
+        }
+      }
     });
     return () => unsubscribe();
-  }, [roomCode]);
+  }, [roomCode, step]);
+
+  const isHost = localStorage.getItem(`isHost_${roomCode}`) === 'true';
 
   // Step 0 → 1: Generate questions then enter questionnaire
   const handleEnterQuestionnaire = async () => {
@@ -746,6 +888,19 @@ export default function ActiveSession() {
   // Step 2 → 3: After sync screen, generate outing plans via API
   const handleSyncDone = async () => {
     if (!roomCode || !roomData) { setStep(3); return; }
+    
+    // If plans already exist, just move forward
+    if (roomData.outingPlans && roomData.outingPlans.length > 0) {
+      setStep(3);
+      return;
+    }
+
+    // Only host triggers the generation
+    if (!isHost) {
+      // Non-hosts stay on sync screen until roomData updates
+      return;
+    }
+
     setIsGenerating(true);
     try {
       const allResponses = (roomData.memberResponses || [])

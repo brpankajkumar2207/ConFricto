@@ -63,38 +63,74 @@ const callGemini = async (prompt: string): Promise<string> => {
     throw new Error("Gemini API key is not configured.");
   }
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: prompt }],
-          },
-        ],
-        generationConfig: {
-          responseMimeType: "application/json",
-        },
-      }),
+  const maxRetries = 3;
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    if (attempt > 0) {
+      // Exponential backoff: 8s, 20s, 40s
+      const waitMs = Math.min(8000 * Math.pow(2, attempt), 40000);
+      console.log(`Gemini API retry ${attempt}/${maxRetries}, waiting ${waitMs/1000}s...`);
+      await new Promise(resolve => setTimeout(resolve, waitMs));
     }
-  );
 
-  if (!response.ok) {
-    throw new Error(`Gemini API error: ${response.statusText}`);
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: prompt }],
+            },
+          ],
+          generationConfig: {
+            responseMimeType: "application/json",
+          },
+        }),
+      }
+    );
+
+    if (response.status === 429) {
+      const errorBody = await response.json().catch(() => ({}));
+      const msg = errorBody?.error?.message || "Rate limited";
+      console.warn(`Gemini rate limited (attempt ${attempt + 1}/${maxRetries}):`, msg);
+      lastError = new Error(msg);
+      continue; // Retry
+    }
+
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      const msg = errorBody?.error?.message || response.statusText;
+      console.error("Gemini API error:", response.status, msg);
+      throw new Error(`Gemini API error (${response.status}): ${msg}`);
+    }
+
+    const data = await response.json();
+    const textContent = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!textContent) {
+      throw new Error("No content received from Gemini API.");
+    }
+
+    return textContent;
   }
 
-  const data = await response.json();
-  const textContent = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  throw lastError || new Error("Gemini API failed after retries.");
+};
 
-  if (!textContent) {
-    throw new Error("No content received from Gemini API.");
-  }
 
-  return textContent;
+// --- Helper: parse cleaned JSON ---
+const parseCleanJson = (text: string) => {
+  let cleaned = text.trim();
+  // Remove starting ```json or ```
+  cleaned = cleaned.replace(/^```(?:json)?/i, '');
+  // Remove ending ```
+  cleaned = cleaned.replace(/```$/, '');
+  return JSON.parse(cleaned.trim());
 };
 
 // --- 1. Generate Questions ---
@@ -148,9 +184,9 @@ Format:
 
   const text = await callGemini(prompt);
   try {
-    return JSON.parse(text) as GeneratedQuestion[];
-  } catch {
-    console.error("Failed to parse Gemini response", text);
+    return parseCleanJson(text) as GeneratedQuestion[];
+  } catch (error) {
+    console.error("Failed to parse Gemini response", text, error);
     throw new Error("Invalid JSON returned by Gemini API");
   }
 };
@@ -213,9 +249,9 @@ Rank them by how well they fit the group's collective responses — best fit fir
 
   const text = await callGemini(prompt);
   try {
-    return JSON.parse(text) as OutingPlan[];
-  } catch {
-    console.error("Failed to parse Gemini response", text);
+    return parseCleanJson(text) as OutingPlan[];
+  } catch (error) {
+    console.error("Failed to parse Gemini response", text, error);
     throw new Error("Invalid JSON returned by Gemini API");
   }
 };
@@ -306,9 +342,9 @@ Make the plans feel like they were planned by a local friend who knows the city 
 
   const text = await callGemini(prompt);
   try {
-    return JSON.parse(text) as FinalPlan[];
-  } catch {
-    console.error("Failed to parse Gemini response", text);
+    return parseCleanJson(text) as FinalPlan[];
+  } catch (error) {
+    console.error("Failed to parse Gemini response", text, error);
     throw new Error("Invalid JSON returned by Gemini API");
   }
 };
