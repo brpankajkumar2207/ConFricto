@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, ChevronRight, Users, CheckCircle, Clock, Flame, Power } from 'lucide-react';
+import { ArrowRight, ChevronRight, Users, CheckCircle, Clock, Flame, Power, Vote, Star, MapPin, Zap, ThumbsUp } from 'lucide-react';
 import { db } from './lib/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc, arrayUnion } from 'firebase/firestore';
+import { generateQuestions, generateOutingPlans, generateFinalPlans } from './lib/gemini';
+import type { OutingPlan, FinalPlan } from './lib/gemini';
 
 // --- Skeuomorphic Helper Components ---
 const SkeuoCard = ({ children, className = "", onClick }: { children: React.ReactNode, className?: string, onClick?: () => void }) => (
@@ -44,7 +46,7 @@ const SkeuoLayout = ({ children, roomCode }: { children: React.ReactNode, roomCo
 };
 
 // --- Screen 1: Room Entrance ---
-const EntranceScreen = ({ onNext, roomCode, joinedCount }: { onNext: () => void, roomCode: string, joinedCount: number }) => (
+const EntranceScreen = ({ onNext, roomCode, joinedCount, isGenerating }: { onNext: () => void, roomCode: string, joinedCount: number, isGenerating: boolean }) => (
   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full flex flex-col items-center text-center">
     <div className="w-20 h-20 skeuo-card rounded-full flex items-center justify-center mb-8">
       <Users className="w-8 h-8 text-rose-500" />
@@ -66,9 +68,9 @@ const EntranceScreen = ({ onNext, roomCode, joinedCount }: { onNext: () => void,
       </div>
       <p className="text-zinc-500 font-medium mb-10">{joinedCount} members synced up.</p>
       
-      <button onClick={onNext} className="w-full skeuo-button-primary py-4 flex items-center justify-center group">
-        <span>ENTER QUESTIONNAIRE</span>
-        <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+      <button onClick={onNext} disabled={isGenerating} className="w-full skeuo-button-primary py-4 flex items-center justify-center group disabled:opacity-50 disabled:cursor-not-allowed">
+        <span>{isGenerating ? "GENERATING QUESTIONS..." : "ENTER QUESTIONNAIRE"}</span>
+        {!isGenerating && <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />}
       </button>
     </SkeuoCard>
   </motion.div>
@@ -120,22 +122,17 @@ const DualSlider = ({ onChange }: { onChange: (min: number, max: number) => void
 };
 
 // --- Screen 2: Private Preferences ---
-const questions = [
-  { id: 1, type: "choice", title: "What's the energy today?", options: ["Chill & Relaxed", "Adventurous", "Party Mode"] },
-  { id: 2, type: "choice", title: "How long do we have?", options: ["A quick bite (1-2 hrs)", "Half Day Hangout", "All Day Epic"] },
-  { id: 3, type: "slider", title: "What's the budget constraint?", options: [] },
-  { id: 4, type: "choice", title: "Preferred environment?", options: ["Indoor Comfort", "Nature & Parks", "City Streets"] },
-  { id: 5, type: "choice", title: "Food situation?", options: ["Just Drinks", "Snacks", "Full Feast"] },
-];
-
-const QuestionnaireScreen = ({ onComplete }: { onComplete: () => void }) => {
+const QuestionnaireScreen = ({ onComplete, questions, roomCode }: { onComplete: (responses: Record<number, string>) => void, questions: any[], roomCode: string }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [responses, setResponses] = useState<Record<number, string>>({});
   
-  const handleNext = () => {
+  const handleAnswer = (answer: string) => {
+    const newResponses = { ...responses, [currentIndex]: answer };
+    setResponses(newResponses);
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(curr => curr + 1);
     } else {
-      onComplete();
+      onComplete(newResponses);
     }
   };
 
@@ -168,35 +165,23 @@ const QuestionnaireScreen = ({ onComplete }: { onComplete: () => void }) => {
         >
           <SkeuoCard className="p-10">
             <h2 className="text-3xl font-display font-bold tracking-tight mb-8 text-zinc-800">
-              {currentQ.title}
+              {currentQ.question || currentQ.title}
             </h2>
 
-            {currentQ.type === 'slider' ? (
-              <div className="w-full flex flex-col gap-6">
-                <DualSlider onChange={(min, max) => console.log(min, max)} />
+            <div className="flex flex-col gap-4">
+              {currentQ.options.map((opt: string, i: number) => (
                 <button 
-                  onClick={handleNext}
-                  className="mt-4 w-full skeuo-button py-4 font-bold text-zinc-700 tracking-widest uppercase transition-all"
+                  key={i}
+                  onClick={() => handleAnswer(opt)}
+                  className="w-full text-left skeuo-button px-6 py-5 flex items-center justify-between group"
                 >
-                  Confirm & Next
+                  <span className="text-lg font-bold text-zinc-700">{opt}</span>
+                  <div className="w-8 h-8 rounded-full skeuo-inset flex items-center justify-center opacity-50 group-hover:opacity-100 transition-opacity">
+                    <ChevronRight className="w-4 h-4 text-rose-500" />
+                  </div>
                 </button>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-4">
-                {currentQ.options.map((opt, i) => (
-                  <button 
-                    key={i}
-                    onClick={handleNext}
-                    className="w-full text-left skeuo-button px-6 py-5 flex items-center justify-between group"
-                  >
-                    <span className="text-lg font-bold text-zinc-700">{opt}</span>
-                    <div className="w-8 h-8 rounded-full skeuo-inset flex items-center justify-center opacity-50 group-hover:opacity-100 transition-opacity">
-                      <ChevronRight className="w-4 h-4 text-rose-500" />
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
+              ))}
+            </div>
           </SkeuoCard>
         </motion.div>
       </AnimatePresence>
@@ -254,163 +239,166 @@ const SyncScreen = ({ onSimulateDone }: { onSimulateDone: () => void }) => {
   );
 };
 
-// --- Screen 4: Plan Proposals ---
-const mockPlans = [
-  { id: "A", score: 94, title: "Urban Sunset", steps: [
-    { time: "18:00", act: "Meetup", loc: "Central Plaza" },
-    { time: "18:30", act: "Dinner", loc: "The Noodle Bar" }
-  ]},
-  { id: "B", score: 88, title: "Active Afternoon", steps: [
-    { time: "14:00", act: "Bouldering", loc: "Peak Gym" },
-    { time: "16:30", act: "Smoothies", loc: "Green Blend" }
-  ]}
-];
+// --- Screen 4: Vote on Plan Proposals ---
+const ProposalsScreen = ({ plans, onSubmitVotes, roomCode }: { plans: OutingPlan[], onSubmitVotes: (votes: number[]) => void, roomCode: string }) => {
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [submitted, setSubmitted] = useState(false);
 
-const ProposalsScreen = ({ onNext }: { onNext: () => void }) => {
+  const toggleVote = (id: number) => {
+    if (submitted) return;
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(v => v !== id) : prev.length < 3 ? [...prev, id] : prev
+    );
+  };
+
+  const handleSubmit = () => {
+    if (selectedIds.length === 0) return;
+    setSubmitted(true);
+    onSubmitVotes(selectedIds);
+  };
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
-        <h2 className="text-4xl font-display font-bold tracking-tight text-zinc-800">Overlap Results</h2>
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+        <div>
+          <h2 className="text-4xl font-display font-bold tracking-tight text-zinc-800">Pick Your Favorites</h2>
+          <p className="text-zinc-500 mt-2">Vote for up to 3 plans that excite you most.</p>
+        </div>
         <div className="skeuo-inset rounded-full px-6 py-2 font-bold text-zinc-500 tracking-widest uppercase text-sm">
-          Phase 1 of 3
+          {selectedIds.length}/3 Selected
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {mockPlans.map((plan, idx) => (
-          <SkeuoCard key={idx} className="relative overflow-hidden group">
-            <div className="flex justify-between items-start mb-6 border-b border-zinc-200 pb-6">
-              <div className="w-12 h-12 skeuo-inset rounded-full flex items-center justify-center font-bold text-xl text-zinc-700">{plan.id}</div>
-              <div className="text-right">
-                <div className="text-3xl font-black text-emerald-500 drop-shadow-sm">{plan.score}%</div>
-                <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Match</div>
-              </div>
-            </div>
-            
-            <h3 className="text-2xl font-bold text-zinc-800 mb-6">{plan.title}</h3>
-            
-            <div className="space-y-6 mb-8">
-              {plan.steps.map((step, sIdx) => (
-                <div key={sIdx} className="flex gap-4">
-                  <div className="skeuo-inset px-2 py-1 rounded h-fit font-mono text-xs font-bold text-zinc-500">{step.time}</div>
-                  <div>
-                    <div className="font-bold text-zinc-800">{step.act}</div>
-                    <div className="text-zinc-500 text-sm">{step.loc}</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        {plans.map((plan) => {
+          const isSelected = selectedIds.includes(plan.id);
+          return (
+            <div
+              key={plan.id}
+              onClick={() => toggleVote(plan.id)}
+              className={`skeuo-card p-6 cursor-pointer transition-all duration-200 ${isSelected ? 'ring-2 ring-rose-500 scale-[1.02]' : 'hover:scale-[1.01]'}`}
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${isSelected ? 'bg-rose-500 text-white' : 'skeuo-inset text-zinc-600'}`}>
+                    {isSelected ? <CheckCircle className="w-5 h-5" /> : plan.id}
                   </div>
+                  <h3 className="text-lg font-bold text-zinc-800">{plan.title}</h3>
                 </div>
-              ))}
+                <div className={`text-xl font-black ${plan.groupFitScore >= 90 ? 'text-emerald-500' : plan.groupFitScore >= 75 ? 'text-amber-500' : 'text-zinc-400'}`}>
+                  {plan.groupFitScore}%
+                </div>
+              </div>
+              <p className="text-zinc-600 text-sm mb-3">{plan.vibe}</p>
+              <div className="flex flex-wrap gap-2 mb-3">
+                <span className="text-xs font-bold skeuo-inset px-3 py-1 rounded-full text-zinc-500">{plan.estimatedCost}</span>
+                <span className="text-xs font-bold skeuo-inset px-3 py-1 rounded-full text-zinc-500">{plan.duration}</span>
+                <span className="text-xs font-bold skeuo-inset px-3 py-1 rounded-full text-zinc-500">{plan.energyLevel}</span>
+              </div>
+              <p className="text-xs text-zinc-400 italic">{plan.bestFor}</p>
             </div>
+          );
+        })}
+      </div>
 
-            <button className="w-full skeuo-button py-3 text-zinc-600 font-bold uppercase tracking-widest hover:text-rose-500">
-              Vote Plan {plan.id}
-            </button>
-          </SkeuoCard>
-        ))}
-      </div>
-      
-      <div className="mt-12 flex justify-center">
-        <button onClick={onNext} className="skeuo-button-primary py-4 px-12 font-bold tracking-widest uppercase text-lg">
-          Lock In Results
-        </button>
-      </div>
+      {!submitted && (
+        <div className="flex justify-center">
+          <button
+            onClick={handleSubmit}
+            disabled={selectedIds.length === 0}
+            className="skeuo-button-primary py-4 px-12 font-bold tracking-widest uppercase text-lg disabled:opacity-50"
+          >
+            Submit Votes ({selectedIds.length})
+          </button>
+        </div>
+      )}
+      {submitted && (
+        <div className="text-center">
+          <p className="text-zinc-500 font-medium">Votes submitted! Generating final plans...</p>
+        </div>
+      )}
     </motion.div>
   );
 };
 
 // --- Screen 5: Final Consensus ---
-const ConsensusScreen = ({ onNext }: { onNext: () => void }) => {
+// --- Screen 5: Final Plans ---
+const FinalPlansScreen = ({ finalPlans }: { finalPlans: FinalPlan[] }) => {
+  const navigate = useNavigate();
+  const ratingColor = (rating: string) => {
+    if (rating === "Perfect Match") return "text-emerald-500";
+    if (rating === "Great Choice") return "text-blue-500";
+    return "text-amber-500";
+  };
+  const ratingBg = (rating: string) => {
+    if (rating === "Perfect Match") return "bg-emerald-100 text-emerald-700";
+    if (rating === "Great Choice") return "bg-blue-100 text-blue-700";
+    return "bg-amber-100 text-amber-700";
+  };
+
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-2xl mx-auto">
+    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-3xl mx-auto">
       <div className="text-center mb-12">
         <div className="w-24 h-24 mx-auto skeuo-card rounded-full flex items-center justify-center mb-6">
           <CheckCircle className="w-12 h-12 text-emerald-500" />
         </div>
         <h2 className="text-5xl font-display font-bold tracking-tight text-zinc-800">Consensus Reached</h2>
+        <p className="text-zinc-500 mt-3 text-lg">Here are your group's best-fit plans.</p>
       </div>
 
-      <div className="space-y-6">
-        <SkeuoCard onClick={onNext} className="border-2 border-emerald-400/50 flex flex-col md:flex-row gap-6 justify-between items-center relative overflow-hidden group">
-          <div className="flex gap-6 items-center">
-            <div className="w-16 h-16 rounded-full skeuo-inset flex items-center justify-center font-bold text-2xl text-emerald-600 shadow-[inset_0_0_10px_rgba(16,185,129,0.2)]">1</div>
-            <div>
-              <div className="flex gap-2 mb-2">
-                <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-sm">Winner</span>
-              </div>
-              <h3 className="text-3xl font-bold text-zinc-800">The Urban Sunset</h3>
-            </div>
-          </div>
-          <div className="flex flex-col items-end gap-2">
-            <div className="skeuo-button py-2 px-6 flex items-center gap-2 font-bold text-emerald-600 uppercase tracking-widest text-xs pointer-events-none">
-               Continue <ArrowRight className="w-4 h-4" />
-            </div>
-            <div className="font-bold text-xs text-zinc-400">100% of votes</div>
-          </div>
-        </SkeuoCard>
-      </div>
-    </motion.div>
-  );
-};
-
-// --- Screen 6: The Locked Plan ---
-const LockedPlanScreen = () => {
-  const navigate = useNavigate();
-  return (
-    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-3xl mx-auto">
-      <SkeuoCard className="p-12 mb-10 text-center relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-rose-400 to-rose-600" />
-        <h2 className="text-4xl md:text-6xl font-display font-bold tracking-tight mb-4 text-zinc-800">The Urban Sunset</h2>
-        <p className="text-xl text-zinc-500 font-medium">Your group's ideal outing.</p>
-      </SkeuoCard>
-      
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
-        <div className="skeuo-inset p-6 rounded-2xl flex flex-col gap-2 items-center text-center">
-          <div className="w-10 h-10 skeuo-card rounded-full flex items-center justify-center mb-2"><CheckCircle className="w-5 h-5 text-emerald-500" /></div>
-          <div className="font-bold text-xs uppercase tracking-widest text-zinc-400">Status</div>
-          <div className="font-bold text-zinc-800">Locked</div>
-        </div>
-        <div className="skeuo-inset p-6 rounded-2xl flex flex-col gap-2 items-center text-center">
-          <div className="w-10 h-10 skeuo-card rounded-full flex items-center justify-center mb-2"><Clock className="w-5 h-5 text-rose-500" /></div>
-          <div className="font-bold text-xs uppercase tracking-widest text-zinc-400">Duration</div>
-          <div className="font-bold text-zinc-800">5h 30m</div>
-        </div>
-        <div className="skeuo-inset p-6 rounded-2xl flex flex-col gap-2 items-center text-center">
-          <div className="w-10 h-10 skeuo-card rounded-full flex items-center justify-center mb-2"><Users className="w-5 h-5 text-blue-500" /></div>
-          <div className="font-bold text-xs uppercase tracking-widest text-zinc-400">Consensus</div>
-          <div className="font-bold text-zinc-800">100% Sync</div>
-        </div>
-        <div className="skeuo-inset p-6 rounded-2xl flex flex-col gap-2 items-center text-center">
-          <div className="w-10 h-10 skeuo-card rounded-full flex items-center justify-center mb-2"><span className="font-bold text-zinc-500">$$</span></div>
-          <div className="font-bold text-xs uppercase tracking-widest text-zinc-400">Cost</div>
-          <div className="font-bold text-zinc-800">Moderate</div>
-        </div>
-      </div>
-
-      <SkeuoCard className="p-10 mb-12">
-        <h3 className="font-bold text-zinc-500 tracking-widest uppercase mb-8 border-b border-zinc-200 pb-4">Final Master Plan</h3>
-        
-        <div className="space-y-8">
-          {[
-            { num: 1, title: "Central Plaza Meetup", note: "Centralized location for everyone arriving from different routes.", time: "18:00" },
-            { num: 2, title: "The Noodle Bar", note: "Matches the selected budget and covers dinner preferences.", time: "18:30" },
-            { num: 3, title: "Sky Lounge Drinks", note: "Perfect 'Chill' energy to end the night.", time: "20:00" },
-          ].map((item, i) => (
-            <div key={i} className="flex gap-6">
-              <div className="w-12 h-12 rounded-full skeuo-inset flex-shrink-0 flex items-center justify-center font-bold text-zinc-600 shadow-inner">{item.num}</div>
-              <div className="flex-1 bg-zinc-50 rounded-xl p-5 border border-zinc-100 shadow-sm">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-bold text-lg text-zinc-800">{item.title}</h4>
-                  <span className="font-bold text-xs text-zinc-400 bg-zinc-200 px-3 py-1 rounded-full">{item.time}</span>
+      <div className="space-y-8 mb-12">
+        {finalPlans.map((plan, idx) => (
+          <SkeuoCard key={plan.id} className="p-8 relative overflow-hidden">
+            {idx === 0 && <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-emerald-600" />}
+            <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
+              <div className="flex items-center gap-4">
+                <div className={`w-14 h-14 rounded-full skeuo-inset flex items-center justify-center font-bold text-xl ${ratingColor(plan.rating)}`}>{plan.id}</div>
+                <div>
+                  <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-sm ${ratingBg(plan.rating)}`}>{plan.rating}</span>
+                  <h3 className="text-2xl font-bold text-zinc-800 mt-2">{plan.title}</h3>
                 </div>
-                <p className="text-zinc-500 text-sm leading-relaxed">{item.note}</p>
+              </div>
+              <div className="text-right">
+                <div className={`text-3xl font-black ${ratingColor(plan.rating)}`}>{plan.ratingScore}%</div>
+                <div className="text-xs font-bold text-zinc-400">{plan.groupVotePercentage} votes</div>
               </div>
             </div>
-          ))}
-        </div>
-      </SkeuoCard>
+
+            <p className="text-zinc-600 mb-4">{plan.vibe}</p>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+              <div className="skeuo-inset p-3 rounded-xl text-center">
+                <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Cost</div>
+                <div className="font-bold text-sm text-zinc-700">{plan.estimatedCost}</div>
+              </div>
+              <div className="skeuo-inset p-3 rounded-xl text-center">
+                <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Duration</div>
+                <div className="font-bold text-sm text-zinc-700">{plan.duration}</div>
+              </div>
+              <div className="skeuo-inset p-3 rounded-xl text-center">
+                <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Energy</div>
+                <div className="font-bold text-sm text-zinc-700">{plan.energyLevel}</div>
+              </div>
+              <div className="skeuo-inset p-3 rounded-xl text-center">
+                <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Area</div>
+                <div className="font-bold text-sm text-zinc-700">{plan.recommendedArea}</div>
+              </div>
+            </div>
+
+            <div className="bg-zinc-50 rounded-xl p-5 border border-zinc-100 mb-4">
+              <h4 className="font-bold text-sm text-zinc-500 uppercase tracking-widest mb-2">Why your group will love this</h4>
+              <p className="text-zinc-700 text-sm leading-relaxed">{plan.whyYourGroupWillLoveThis}</p>
+            </div>
+            <div className="bg-zinc-50 rounded-xl p-5 border border-zinc-100">
+              <h4 className="font-bold text-sm text-zinc-500 uppercase tracking-widest mb-2">What to expect</h4>
+              <p className="text-zinc-700 text-sm leading-relaxed">{plan.whatToExpect}</p>
+            </div>
+          </SkeuoCard>
+        ))}
+      </div>
 
       <div className="flex flex-col sm:flex-row gap-6 justify-center">
-        <button className="skeuo-button-primary py-5 px-10">Share Itinerary</button>
-        <button onClick={() => navigate('/')} className="skeuo-button py-5 px-10 text-zinc-600">Finish</button>
+        <button onClick={() => navigate('/')} className="skeuo-button-primary py-5 px-10">Finish</button>
       </div>
     </motion.div>
   );
@@ -421,6 +409,9 @@ export default function ActiveSession() {
   const { roomCode } = useParams();
   const [step, setStep] = useState(0);
   const [roomData, setRoomData] = useState<any>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [outingPlans, setOutingPlans] = useState<OutingPlan[]>([]);
+  const [finalPlans, setFinalPlans] = useState<FinalPlan[]>([]);
 
   useEffect(() => {
     if (!roomCode) return;
@@ -430,15 +421,90 @@ export default function ActiveSession() {
     return () => unsubscribe();
   }, [roomCode]);
 
+  // Step 0 → 1: Generate questions then enter questionnaire
+  const handleEnterQuestionnaire = async () => {
+    if (!roomCode || !roomData) return;
+    if (roomData.questions) { setStep(1); return; }
+    setIsGenerating(true);
+    try {
+      const q = await generateQuestions(roomData.brief, roomData.location || "Not specified", roomData.totalMembers);
+      await updateDoc(doc(db, 'rooms', roomCode), { questions: q });
+      setStep(1);
+    } catch (err) { console.error(err); alert("Failed to generate questions."); }
+    finally { setIsGenerating(false); }
+  };
+
+  // Step 1 → 2: Save responses to Firestore, then generate outing plans
+  const handleQuestionnaireComplete = async (responses: Record<number, string>) => {
+    if (!roomCode || !roomData) return;
+    const questions = roomData.questions || [];
+    const formatted = Object.entries(responses).map(([idx, answer]) => {
+      const q = questions[Number(idx)];
+      return `Q: ${q?.question || q?.title || ''} → A: ${answer}`;
+    });
+    try {
+      await updateDoc(doc(db, 'rooms', roomCode), {
+        memberResponses: arrayUnion({ responses: formatted, timestamp: Date.now() })
+      });
+    } catch (e) { console.error("Failed to save responses", e); }
+    setStep(2);
+  };
+
+  // Step 2 → 3: After sync screen, generate outing plans via API
+  const handleSyncDone = async () => {
+    if (!roomCode || !roomData) { setStep(3); return; }
+    setIsGenerating(true);
+    try {
+      const allResponses = (roomData.memberResponses || [])
+        .map((r: any, i: number) => `Member ${i + 1}:\n${(r.responses || []).join('\n')}`)
+        .join('\n\n');
+      const plans = await generateOutingPlans(
+        roomData.brief, roomData.location || "Not specified",
+        roomData.totalMembers, allResponses || "No responses yet"
+      );
+      setOutingPlans(plans);
+      await updateDoc(doc(db, 'rooms', roomCode), { outingPlans: plans });
+    } catch (err) { console.error(err); alert("Failed to generate plans."); }
+    finally { setIsGenerating(false); setStep(3); }
+  };
+
+  // Step 3 → 4: After voting, generate final refined plans
+  const handleVotesSubmitted = async (votedIds: number[]) => {
+    if (!roomCode || !roomData) return;
+    const plans = outingPlans.length > 0 ? outingPlans : (roomData.outingPlans || []);
+    const votedPlansData = plans.map((p: OutingPlan) => ({
+      title: p.title, vibe: p.vibe, estimatedCost: p.estimatedCost,
+      votesReceived: votedIds.includes(p.id) ? 1 : 0
+    }));
+    try {
+      await updateDoc(doc(db, 'rooms', roomCode), { 
+        votes: arrayUnion(...votedIds),
+        status: 'revealing' 
+      });
+      const finals = await generateFinalPlans(
+        roomData.brief, roomData.location || "Not specified",
+        roomData.totalMembers, JSON.stringify(votedPlansData)
+      );
+      setFinalPlans(finals);
+      await updateDoc(doc(db, 'rooms', roomCode), { 
+        finalPlans: finals,
+        status: 'revealed'
+      });
+      setStep(4);
+    } catch (err) { console.error(err); alert("Failed to generate final plans."); }
+  };
+
+  const activePlans = outingPlans.length > 0 ? outingPlans : (roomData?.outingPlans || []);
+  const activeFinals = finalPlans.length > 0 ? finalPlans : (roomData?.finalPlans || []);
+
   return (
     <SkeuoLayout roomCode={roomCode}>
       <AnimatePresence mode="wait">
-        {step === 0 && <EntranceScreen key="s0" roomCode={roomCode || ''} joinedCount={roomData?.joinedMembers?.length || 1} onNext={() => setStep(1)} />}
-        {step === 1 && <QuestionnaireScreen key="s1" onComplete={() => setStep(2)} />}
-        {step === 2 && <SyncScreen key="s2" onSimulateDone={() => setStep(3)} />}
-        {step === 3 && <ProposalsScreen key="s3" onNext={() => setStep(4)} />}
-        {step === 4 && <ConsensusScreen key="s4" onNext={() => setStep(5)} />}
-        {step === 5 && <LockedPlanScreen key="s5" />}
+        {step === 0 && <EntranceScreen key="s0" roomCode={roomCode || ''} joinedCount={roomData?.joinedMembers?.length || 1} isGenerating={isGenerating} onNext={handleEnterQuestionnaire} />}
+        {step === 1 && <QuestionnaireScreen key="s1" questions={roomData?.questions || []} roomCode={roomCode || ''} onComplete={handleQuestionnaireComplete} />}
+        {step === 2 && <SyncScreen key="s2" onSimulateDone={handleSyncDone} />}
+        {step === 3 && <ProposalsScreen key="s3" plans={activePlans} roomCode={roomCode || ''} onSubmitVotes={handleVotesSubmitted} />}
+        {step === 4 && <FinalPlansScreen key="s4" finalPlans={activeFinals} />}
       </AnimatePresence>
     </SkeuoLayout>
   );

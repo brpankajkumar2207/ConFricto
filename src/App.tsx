@@ -213,13 +213,14 @@ const InviteEntry = () => {
 const CreateSession = () => {
   const navigate = useNavigate();
   const [brief, setBrief] = useState('');
+  const [location, setLocation] = useState('');
   const [size, setSize] = useState('');
   const [hostName, setHostName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleCreate = async () => {
-    if (!brief || !size || !hostName) return;
+    if (!brief || !location || !size || !hostName) return;
     setIsLoading(true);
     setError('');
 
@@ -234,6 +235,7 @@ const CreateSession = () => {
       await setDoc(doc(db, 'rooms', code), {
         roomCode: code,
         brief: brief,
+        location: location,
         totalMembers: parseInt(size),
         joinedMembers: [hostName],
         status: "waiting",
@@ -301,6 +303,17 @@ const CreateSession = () => {
           />
 
           <label className="block text-left text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 ml-2">
+            Location/City
+          </label>
+          <input 
+            type="text" 
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="e.g., Koramangala, Bangalore" 
+            className="w-full skeuo-input mb-6 placeholder:text-zinc-400 text-zinc-800"
+          />
+
+          <label className="block text-left text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 ml-2">
             Squad Size
           </label>
           <input 
@@ -319,7 +332,7 @@ const CreateSession = () => {
 
           <button 
             onClick={handleCreate}
-            disabled={isLoading || !brief || !size || !hostName}
+            disabled={isLoading || !brief || !location || !size || !hostName}
             className="w-full skeuo-button-primary py-4 text-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span>{isLoading ? 'CREATING...' : 'CREATE SESSION'}</span>
