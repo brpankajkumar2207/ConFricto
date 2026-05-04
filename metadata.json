@@ -1,0 +1,10 @@
+{
+  "name": "Remix: Quiet Choice",
+  "description": "A privacy-first AI group outing planner designed for honest consensus without social pressure.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "AI-powered planning",
+    "Privacy-first voting",
+    "Group coordination"
+  ]
+}
