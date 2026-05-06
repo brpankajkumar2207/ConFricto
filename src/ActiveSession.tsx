@@ -18,15 +18,16 @@ const BrutalCard = ({ children, className = "", onClick }: { children: React.Rea
 );
 
 // --- Layout Wrapper ---
-const BrutalLayout = ({ children, roomCode }: { children: React.ReactNode, roomCode?: string }) => {
+const BrutalLayout = ({ children, roomCode, onBack }: { children: React.ReactNode, roomCode?: string, onBack?: () => void }) => {
   const navigate = useNavigate();
+  const handleBack = onBack ?? (() => navigate('/'));
   return (
     <div className="min-h-screen text-black font-sans relative overflow-hidden selection:bg-black selection:text-white pb-24">
       {/* Top Navigation */}
       <nav className="fixed top-0 left-0 w-full p-6 flex justify-between items-center z-50 pointer-events-none">
         <div className="flex items-center gap-4 pointer-events-auto">
           <button 
-            onClick={() => navigate('/')}
+            onClick={handleBack}
             className="w-12 h-12 brutal-card flex items-center justify-center hover:bg-[var(--color-brutal-yellow)] bg-white"
           >
             <ArrowLeft className="w-6 h-6 text-black" />
@@ -135,28 +136,29 @@ const DualSlider = ({ onChange }: { onChange: (min: number, max: number) => void
 };
 
 // --- Screen 2: Private Preferences ---
-const QuestionnaireScreen = ({ onComplete, questions, roomCode }: { onComplete: (responses: Record<number, string>) => void, questions: any[], roomCode: string }) => {
+const QuestionnaireScreen = ({ onComplete, questions, roomCode }: { onComplete: (responses: Record<number, string>, customInsight: string) => void, questions: any[], roomCode: string }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [responses, setResponses] = useState<Record<number, string>>({});
+  const [insight, setInsight] = useState("");
   
   const handleAnswer = (answer: string) => {
     const newResponses = { ...responses, [currentIndex]: answer };
     setResponses(newResponses);
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex(curr => curr + 1);
-    } else {
-      onComplete(newResponses);
-    }
+    setCurrentIndex(curr => curr + 1);
   };
 
-  const progress = ((currentIndex) / questions.length) * 100;
-  const currentQ = questions[currentIndex];
+  const handleFinish = () => {
+    onComplete(responses, insight);
+  };
+
+  const isInsightStep = currentIndex === questions.length;
+  const progress = ((currentIndex) / (questions.length + 1)) * 100;
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-2xl mx-auto">
       <div className="flex flex-col mb-12">
         <div className="font-black text-black uppercase tracking-widest text-sm mb-4">
-          Q.{currentIndex + 1} // {questions.length}
+          {isInsightStep ? `FINAL INSIGHT` : `Q.${currentIndex + 1} // ${questions.length}`}
         </div>
         <div className="w-full h-8 brutal-inset bg-white relative overflow-hidden">
           <motion.div 
@@ -177,22 +179,44 @@ const QuestionnaireScreen = ({ onComplete, questions, roomCode }: { onComplete: 
           className="w-full"
         >
           <BrutalCard className="p-10">
-            <h2 className="text-4xl font-black uppercase tracking-tight mb-12 text-black">
-              {currentQ.question || currentQ.title}
-            </h2>
-
-            <div className="flex flex-col gap-4">
-              {currentQ.options.map((opt: string, i: number) => (
+            {isInsightStep ? (
+              <>
+                <h2 className="text-4xl font-black uppercase tracking-tight mb-8 text-black">
+                  ANYTHING ELSE WE SHOULD KNOW?
+                </h2>
+                <textarea 
+                  className="w-full brutal-inset p-4 text-xl border-4 border-black mb-8 focus:outline-none focus:border-[var(--color-brutal-pink)]"
+                  rows={4}
+                  placeholder="Specific cravings, strict vetos, or wild ideas..."
+                  value={insight}
+                  onChange={e => setInsight(e.target.value)}
+                />
                 <button 
-                  key={i}
-                  onClick={() => handleAnswer(opt)}
-                  className="w-full text-left brutal-button px-8 py-6 flex items-center justify-between group bg-white hover:bg-[var(--color-brutal-yellow)]"
+                  onClick={handleFinish}
+                  className="w-full text-center brutal-button-primary px-8 py-6 flex items-center justify-center group disabled:opacity-50"
                 >
-                  <span className="text-xl font-black text-black uppercase tracking-wide">{opt}</span>
-                  <ChevronRight className="w-6 h-6 text-black group-hover:translate-x-2 transition-transform" />
+                  <span className="text-xl font-black uppercase tracking-wide">SUBMIT PREFERENCES</span>
                 </button>
-              ))}
-            </div>
+              </>
+            ) : (
+              <>
+                <h2 className="text-4xl font-black uppercase tracking-tight mb-12 text-black">
+                  {questions[currentIndex].question || questions[currentIndex].title}
+                </h2>
+                <div className="flex flex-col gap-4">
+                  {questions[currentIndex].options.map((opt: string, i: number) => (
+                    <button 
+                      key={i}
+                      onClick={() => handleAnswer(opt)}
+                      className="w-full text-left brutal-button px-8 py-6 flex items-center justify-between group bg-white hover:bg-[var(--color-brutal-yellow)]"
+                    >
+                      <span className="text-xl font-black text-black uppercase tracking-wide">{opt}</span>
+                      <ChevronRight className="w-6 h-6 text-black group-hover:translate-x-2 transition-transform" />
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </BrutalCard>
         </motion.div>
       </AnimatePresence>
@@ -201,13 +225,12 @@ const QuestionnaireScreen = ({ onComplete, questions, roomCode }: { onComplete: 
 };
 
 // --- Screen 3: Waiting Lobby (Interactive UI) ---
-const SyncScreen = ({ onSimulateDone }: { onSimulateDone: () => void }) => {
+const SyncScreen = ({ roomData, isHost, isGenerating, onGenerate }: { roomData: any, isHost: boolean, isGenerating: boolean, onGenerate: () => void }) => {
   const [mashes, setMashes] = useState(0);
 
-  useEffect(() => {
-    const timer = setTimeout(onSimulateDone, 5000);
-    return () => clearTimeout(timer);
-  }, [onSimulateDone]);
+  const responsesCount = roomData?.memberResponses?.length || 0;
+  const totalCount = roomData?.totalMembers || 1;
+  const allResponded = responsesCount >= totalCount;
 
   const handleInteract = () => {
     setMashes(m => m + 1);
@@ -221,25 +244,41 @@ const SyncScreen = ({ onSimulateDone }: { onSimulateDone: () => void }) => {
       className="w-full flex flex-col items-center justify-center min-h-[60vh] text-center transition-transform duration-75"
     >
       <div className="brutal-card bg-black text-white p-6 mb-12 transform -rotate-2 shadow-[8px_8px_0px_#FFD600]">
-        <h2 className="text-5xl font-black uppercase tracking-tighter">CALCULATING</h2>
+        <h2 className="text-5xl font-black uppercase tracking-tighter">
+          {allResponded ? "ALL DATA SYNCED" : "CALCULATING"}
+        </h2>
       </div>
       <div className="flex gap-4 items-center mb-16">
         <div className="w-1.5 h-8 bg-black flex-shrink-0"></div>
-        <p className="text-black font-black text-xl uppercase tracking-widest">AWAITING OTHERS. MASH TO EXPEDITE.</p>
+        <p className="text-black font-black text-xl uppercase tracking-widest">
+          {allResponded ? "READY TO GENERATE PLANS." : `AWAITING OTHERS (${responsesCount}/${totalCount}). MASH TO EXPEDITE.`}
+        </p>
       </div>
       
       <div className="relative mb-12 flex flex-col items-center">
-        <button 
-          onClick={handleInteract}
-          className="brutal-button bg-[var(--color-brutal-pink)] text-white w-56 h-56 flex items-center justify-center text-6xl active:bg-black transition-colors shadow-[12px_12px_0px_black] active:translate-y-2 active:translate-x-2 active:shadow-[0px_0px_0px_black]"
-        >
-          MASH
-        </button>
-        
-        <div className="mt-16 brutal-inset px-10 py-6 flex items-center gap-6 bg-white border-4 border-black text-black font-black text-4xl shadow-[8px_8px_0px_black]">
-          <span>{mashes}</span>
-          <span className="text-[var(--color-brutal-pink)]">HITS</span>
-        </div>
+        {allResponded && isHost ? (
+          <button 
+            onClick={onGenerate}
+            disabled={isGenerating}
+            className="brutal-button-primary py-6 px-12 text-2xl font-black uppercase disabled:opacity-50"
+          >
+            {isGenerating ? "GENERATING..." : "GENERATE PLANS"}
+          </button>
+        ) : (
+          <>
+            <button 
+              onClick={handleInteract}
+              className="brutal-button bg-[var(--color-brutal-pink)] text-white w-56 h-56 flex items-center justify-center text-6xl active:bg-black transition-colors shadow-[12px_12px_0px_black] active:translate-y-2 active:translate-x-2 active:shadow-[0px_0px_0px_black]"
+            >
+              MASH
+            </button>
+            
+            <div className="mt-16 brutal-inset px-10 py-6 flex items-center gap-6 bg-white border-4 border-black text-black font-black text-4xl shadow-[8px_8px_0px_black]">
+              <span>{mashes}</span>
+              <span className="text-[var(--color-brutal-pink)]">HITS</span>
+            </div>
+          </>
+        )}
       </div>
     </motion.div>
   );
@@ -339,9 +378,7 @@ const ProposalsScreen = ({ plans, onSubmitVotes, roomCode }: { plans: OutingPlan
 };
 
 // --- Screen 5: Final Plans ---
-const FinalPlansScreen = ({ finalPlans }: { finalPlans: FinalPlan[] }) => {
-  const [revealed, setRevealed] = useState(false);
-
+const FinalPlansScreen = ({ finalPlans, revealed, onReveal }: { finalPlans: FinalPlan[], revealed: boolean, onReveal: (v: boolean) => void }) => {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-3xl mx-auto flex flex-col items-center">
       {!revealed ? (
@@ -357,7 +394,7 @@ const FinalPlansScreen = ({ finalPlans }: { finalPlans: FinalPlan[] }) => {
             {finalPlans.map((plan, idx) => (
               <BrutalCard 
                 key={plan.id}
-                onClick={() => setRevealed(true)} 
+                onClick={() => onReveal(true)} 
                 className={`${idx === 0 ? 'bg-[var(--color-brutal-yellow)]' : 'bg-white'} border-4 border-black flex flex-col md:flex-row gap-8 justify-between items-center cursor-pointer hover:translate-y-[-4px] transition-transform`}
               >
                 <div className="flex gap-8 items-center w-full">
@@ -464,11 +501,13 @@ const LockedPlanScreen = ({ plan }: { plan: FinalPlan }) => {
 // --- Main Active Session Flow Manager ---
 export default function ActiveSession() {
   const { roomCode } = useParams();
+  const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [roomData, setRoomData] = useState<any>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [outingPlans, setOutingPlans] = useState<OutingPlan[]>([]);
   const [finalPlans, setFinalPlans] = useState<FinalPlan[]>([]);
+  const [planRevealed, setPlanRevealed] = useState(false);
 
   useEffect(() => {
     if (!roomCode) return;
@@ -492,6 +531,13 @@ export default function ActiveSession() {
 
   const isHost = localStorage.getItem(`isHost_${roomCode}`) === 'true';
 
+  // Smart back navigation
+  const handleBack = () => {
+    if (step === 4 && planRevealed) { setPlanRevealed(false); return; }
+    if (step > 0) { setStep(s => s - 1); return; }
+    navigate('/');
+  };
+
   // Step 0 → 1: Generate questions then enter questionnaire
   const handleEnterQuestionnaire = async () => {
     if (!roomCode || !roomData) return;
@@ -505,14 +551,17 @@ export default function ActiveSession() {
     finally { setIsGenerating(false); }
   };
 
-  // Step 1 → 2: Save responses to Firestore, then generate outing plans
-  const handleQuestionnaireComplete = async (responses: Record<number, string>) => {
+  // Step 1 → 2: Save responses to Firestore, then wait for others
+  const handleQuestionnaireComplete = async (responses: Record<number, string>, customInsight: string) => {
     if (!roomCode || !roomData) return;
     const questions = roomData.questions || [];
     const formatted = Object.entries(responses).map(([idx, answer]) => {
       const q = questions[Number(idx)];
       return `Q: ${q?.question || q?.title || ''} → A: ${answer}`;
     });
+    if (customInsight.trim()) {
+      formatted.push(`Additional Insight: ${customInsight.trim()}`);
+    }
     try {
       await updateDoc(doc(db, 'rooms', roomCode), {
         memberResponses: arrayUnion({ responses: formatted, timestamp: Date.now() })
@@ -521,21 +570,10 @@ export default function ActiveSession() {
     setStep(2);
   };
 
-  // Step 2 → 3: After sync screen, generate outing plans via API
-  const handleSyncDone = async () => {
-    if (!roomCode || !roomData) { setStep(3); return; }
-    
-    // If plans already exist, just move forward
-    if (roomData.outingPlans && roomData.outingPlans.length > 0) {
-      setStep(3);
-      return;
-    }
-
-    // Only host triggers the generation
-    if (!isHost) {
-      // Non-hosts stay on sync screen until roomData updates
-      return;
-    }
+  // Step 2 → 3: Generate outing plans via API (Host only)
+  const handleGeneratePlans = async () => {
+    if (!roomCode || !roomData) return;
+    if (!isHost) return;
 
     setIsGenerating(true);
     try {
@@ -552,7 +590,10 @@ export default function ActiveSession() {
       console.error(err); 
       alert("Failed to generate plans: " + (err.message || "Unknown error")); 
     }
-    finally { setIsGenerating(false); setStep(3); }
+    finally { 
+      setIsGenerating(false); 
+      setStep(3); 
+    }
   };
 
   // Step 3 → 4: After voting, generate final refined plans
@@ -588,13 +629,13 @@ export default function ActiveSession() {
   const activeFinals = finalPlans.length > 0 ? finalPlans : (roomData?.finalPlans || []);
 
   return (
-    <BrutalLayout roomCode={roomCode}>
+    <BrutalLayout roomCode={roomCode} onBack={handleBack}>
       <AnimatePresence mode="wait">
         {step === 0 && <EntranceScreen key="s0" roomCode={roomCode || ''} joinedCount={roomData?.joinedMembers?.length || 1} isGenerating={isGenerating} onNext={handleEnterQuestionnaire} />}
         {step === 1 && <QuestionnaireScreen key="s1" questions={roomData?.questions || []} roomCode={roomCode || ''} onComplete={handleQuestionnaireComplete} />}
-        {step === 2 && <SyncScreen key="s2" onSimulateDone={handleSyncDone} />}
+        {step === 2 && <SyncScreen key="s2" roomData={roomData} isHost={isHost} isGenerating={isGenerating} onGenerate={handleGeneratePlans} />}
         {step === 3 && <ProposalsScreen key="s3" plans={activePlans} roomCode={roomCode || ''} onSubmitVotes={handleVotesSubmitted} />}
-        {step === 4 && <FinalPlansScreen key="s4" finalPlans={activeFinals} />}
+        {step === 4 && <FinalPlansScreen key="s4" finalPlans={activeFinals} revealed={planRevealed} onReveal={setPlanRevealed} />}
       </AnimatePresence>
     </BrutalLayout>
   );
