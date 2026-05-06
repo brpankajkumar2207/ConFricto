@@ -56,15 +56,15 @@ export interface FinalPlan {
   groupVotesReceived?: number;
 }
 
-// --- Helper: call Grok API (Primary) ---
-const callGrok = async (prompt: string): Promise<string> => {
-  const apiKey = import.meta.env.VITE_GROK_API_KEY;
+// --- Helper: call Groq API (Primary) ---
+const callGroq = async (prompt: string): Promise<string> => {
+  const apiKey = import.meta.env.VITE_GROQ_API_KEY;
   if (!apiKey) {
-    throw new Error("Grok API key is not configured.");
+    throw new Error("Groq API key is not configured.");
   }
 
   const response = await fetch(
-    "https://api.x.ai/v1/chat/completions",
+    "https://api.groq.com/openai/v1/chat/completions",
     {
       method: "POST",
       headers: {
@@ -72,7 +72,7 @@ const callGrok = async (prompt: string): Promise<string> => {
         "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: "grok-beta",
+        model: "llama-3.3-70b-versatile",
         messages: [
           {
             role: "system",
@@ -91,107 +91,31 @@ const callGrok = async (prompt: string): Promise<string> => {
   if (!response.ok) {
     const errorBody = await response.json().catch(() => ({}));
     const msg = errorBody?.error?.message || errorBody?.error || response.statusText;
-    console.error("Grok API error:", response.status, msg);
-    throw new Error(`Grok API error (${response.status}): ${msg}`);
+    console.error("Groq API error:", response.status, msg);
+    throw new Error(`Groq API error (${response.status}): ${msg}`);
   }
 
   const data = await response.json();
   const textContent = data.choices?.[0]?.message?.content;
 
   if (!textContent) {
-    throw new Error("No content received from Grok API.");
+    throw new Error("No content received from Groq API.");
   }
 
   return textContent;
 };
 
-// --- Helper: call Gemini API (Fallback) ---
-const callGemini = async (prompt: string): Promise<string> => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error("Gemini API key is not configured.");
-  }
-
-  const maxRetries = 3;
-  let lastError: Error | null = null;
-
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    if (attempt > 0) {
-      const waitMs = Math.min(8000 * Math.pow(2, attempt), 40000);
-      console.log(`Gemini API retry ${attempt}/${maxRetries}, waiting ${waitMs/1000}s...`);
-      await new Promise(resolve => setTimeout(resolve, waitMs));
-    }
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [{ text: prompt }],
-            },
-          ],
-          generationConfig: {
-            responseMimeType: "application/json",
-          },
-        }),
-      }
-    );
-
-    if (response.status === 429) {
-      const errorBody = await response.json().catch(() => ({}));
-      const msg = errorBody?.error?.message || "Rate limited";
-      console.warn(`Gemini rate limited (attempt ${attempt + 1}/${maxRetries}):`, msg);
-      lastError = new Error(msg);
-      continue;
-    }
-
-    if (!response.ok) {
-      const errorBody = await response.json().catch(() => ({}));
-      const msg = errorBody?.error?.message || response.statusText;
-      console.error("Gemini API error:", response.status, msg);
-      throw new Error(`Gemini API error (${response.status}): ${msg}`);
-    }
-
-    const data = await response.json();
-    const textContent = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!textContent) {
-      throw new Error("No content received from Gemini API.");
-    }
-
-    return textContent;
-  }
-
-  throw lastError || new Error("Gemini API failed after retries.");
-};
-
-// --- Orchestrator: Grok first → Gemini fallback ---
+// --- Orchestrator: Groq only ---
 const callAI = async (prompt: string): Promise<string> => {
-  const grokKey = import.meta.env.VITE_GROK_API_KEY;
-  
-  // Try Grok first if key is available
-  if (grokKey) {
-    try {
-      console.log("🟢 Attempting Grok API (primary)...");
-      const result = await callGrok(prompt);
-      console.log("✅ Grok API succeeded.");
-      return result;
-    } catch (grokError: any) {
-      console.warn("⚠️ Grok API failed, falling back to Gemini:", grokError.message);
-    }
-  } else {
-    console.log("⏭️ No Grok key configured, using Gemini directly.");
+  const groqKey = import.meta.env.VITE_GROQ_API_KEY;
+
+  if (!groqKey) {
+    throw new Error("Groq API key (VITE_GROQ_API_KEY) is not configured in .env");
   }
 
-  // Fallback to Gemini
-  console.log("🔵 Attempting Gemini API (fallback)...");
-  const result = await callGemini(prompt);
-  console.log("✅ Gemini API succeeded.");
+  console.log("🟢 Calling Groq API...");
+  const result = await callGroq(prompt);
+  console.log("✅ Groq API succeeded.");
   return result;
 };
 
@@ -259,8 +183,8 @@ Format:
   try {
     return parseCleanJson(text) as GeneratedQuestion[];
   } catch (error) {
-    console.error("Failed to parse Gemini response", text, error);
-    throw new Error("Invalid JSON returned by Gemini API");
+    console.error("Failed to parse Groq response", text, error);
+    throw new Error("Invalid JSON returned by Groq API");
   }
 };
 
@@ -324,8 +248,8 @@ Rank them by how well they fit the group's collective responses — best fit fir
   try {
     return parseCleanJson(text) as OutingPlan[];
   } catch (error) {
-    console.error("Failed to parse Gemini response", text, error);
-    throw new Error("Invalid JSON returned by Gemini API");
+    console.error("Failed to parse Groq response", text, error);
+    throw new Error("Invalid JSON returned by Groq API");
   }
 };
 
@@ -417,7 +341,7 @@ Make the plans feel like they were planned by a local friend who knows the city 
   try {
     return parseCleanJson(text) as FinalPlan[];
   } catch (error) {
-    console.error("Failed to parse Gemini response", text, error);
-    throw new Error("Invalid JSON returned by Gemini API");
+    console.error("Failed to parse Groq response", text, error);
+    throw new Error("Invalid JSON returned by Groq API");
   }
 };
