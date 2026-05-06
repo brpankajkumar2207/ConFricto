@@ -8,13 +8,14 @@ import { generateQuestions, generateOutingPlans, generateFinalPlans } from './li
 import type { OutingPlan, FinalPlan } from './lib/gemini';
 
 // --- Brutalmorphic Helper Components ---
-const BrutalCard = ({ children, className = "", onClick }: { children: React.ReactNode, className?: string, onClick?: () => void }) => (
-  <div 
+const BrutalCard = ({ children, className = "", onClick, initial, animate, exit, transition, variants, whileHover }: any) => (
+  <motion.div 
     onClick={onClick}
+    initial={initial} animate={animate} exit={exit} transition={transition} variants={variants} whileHover={whileHover}
     className={`brutal-card p-8 ${onClick ? 'cursor-pointer hover:-translate-y-1 transition-transform' : ''} ${className}`}
   >
     {children}
-  </div>
+  </motion.div>
 );
 
 // --- Layout Wrapper ---
@@ -53,39 +54,55 @@ const BrutalLayout = ({ children, roomCode, onBack }: { children: React.ReactNod
 
 // --- Screen 1: Room Entrance ---
 const EntranceScreen = ({ onNext, roomCode, joinedCount, isGenerating }: { onNext: () => void, roomCode: string, joinedCount: number, isGenerating: boolean }) => (
-  <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="w-full flex flex-col justify-center md:px-12">
+  <motion.div initial={{ opacity: 0, x: -50, filter: "blur(10px)" }} animate={{ opacity: 1, x: 0, filter: "blur(0px)" }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.5, type: "spring", bounce: 0.4 }} className="w-full flex flex-col justify-center md:px-12">
     <div className="mb-12">
-      <div className="w-16 h-16 bg-black flex items-center justify-center mb-8 shadow-[6px_6px_0px_#FFD600]">
+      <motion.div 
+        initial={{ rotate: -90, scale: 0 }} animate={{ rotate: 0, scale: 1 }} transition={{ type: "spring", stiffness: 200, damping: 15 }}
+        className="w-16 h-16 bg-black flex items-center justify-center mb-8 shadow-[6px_6px_0px_#FFD600]"
+      >
         <Users className="w-8 h-8 text-white" />
-      </div>
-      <h1 className="text-5xl md:text-7xl font-black text-black mb-6 tracking-tighter uppercase">
+      </motion.div>
+      <motion.h1 
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, type: "spring" }}
+        className="text-5xl md:text-7xl font-black text-black mb-6 tracking-tighter uppercase"
+      >
         READY TO<br/>EXECUTE?
-      </h1>
-      <div className="flex gap-4 items-center">
-         <div className="w-1.5 h-12 bg-black flex-shrink-0"></div>
+      </motion.h1>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="flex gap-4 items-center">
+         <motion.div initial={{ height: 0 }} animate={{ height: 48 }} transition={{ delay: 0.4, duration: 0.3 }} className="w-1.5 bg-black flex-shrink-0" />
          <p className="text-zinc-600 font-medium max-w-sm">The squad is assembled. Time to feed your preferences into the protocol.</p>
-      </div>
+      </motion.div>
     </div>
     
     <BrutalCard className="w-full max-w-md p-10">
-      <div className="flex gap-2 mb-8 p-4 brutal-inset flex-wrap justify-center bg-white">
+      <motion.div 
+        variants={{ show: { transition: { staggerChildren: 0.1 } } }} initial="hidden" animate="show"
+        className="flex gap-2 mb-8 p-4 brutal-inset flex-wrap justify-center bg-white"
+      >
         {[...Array(Math.min(joinedCount, 4))].map((_, i) => (
-          <div key={i} className="w-14 h-14 border-4 border-black bg-white shadow-[2px_2px_0px_black] flex items-center justify-center">
+          <motion.div 
+            key={i} variants={{ hidden: { scale: 0, rotate: -15 }, show: { scale: 1, rotate: 0 } }} transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="w-14 h-14 border-4 border-black bg-white shadow-[2px_2px_0px_black] flex items-center justify-center"
+          >
             <Users className="w-6 h-6 text-black" />
-          </div>
+          </motion.div>
         ))}
         {joinedCount > 4 && (
-          <div className="w-14 h-14 border-4 border-black bg-[var(--color-brutal-pink)] shadow-[2px_2px_0px_black] flex items-center justify-center font-black text-sm text-white">
+          <motion.div variants={{ hidden: { scale: 0 }, show: { scale: 1 } }} className="w-14 h-14 border-4 border-black bg-[var(--color-brutal-pink)] shadow-[2px_2px_0px_black] flex items-center justify-center font-black text-sm text-white">
             +{joinedCount - 4}
-          </div>
+          </motion.div>
         )}
-      </div>
+      </motion.div>
       <p className="text-black font-black uppercase tracking-widest text-center mb-10">{joinedCount} UNITS SYNCED.</p>
       
-      <button onClick={onNext} disabled={isGenerating} className="w-full brutal-button-primary py-4 flex items-center justify-between px-6 group disabled:opacity-50">
+      <motion.button 
+        whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }}
+        onClick={onNext} disabled={isGenerating} 
+        className="w-full brutal-button-primary py-4 flex items-center justify-between px-6 group disabled:opacity-50"
+      >
         <span>{isGenerating ? "GENERATING..." : "BEGIN PROTOCOL"}</span>
         {!isGenerating && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
-      </button>
+      </motion.button>
     </BrutalCard>
   </motion.div>
 );
@@ -181,40 +198,56 @@ const QuestionnaireScreen = ({ onComplete, questions, roomCode }: { onComplete: 
           <BrutalCard className="p-10">
             {isInsightStep ? (
               <>
-                <h2 className="text-4xl font-black uppercase tracking-tight mb-8 text-black">
+                <motion.h2 
+                  initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                  className="text-4xl font-black uppercase tracking-tight mb-8 text-black"
+                >
                   ANYTHING ELSE WE SHOULD KNOW?
-                </h2>
-                <textarea 
+                </motion.h2>
+                <motion.textarea 
+                  initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}
                   className="w-full brutal-inset p-4 text-xl border-4 border-black mb-8 focus:outline-none focus:border-[var(--color-brutal-pink)]"
                   rows={4}
                   placeholder="Specific cravings, strict vetos, or wild ideas..."
                   value={insight}
                   onChange={e => setInsight(e.target.value)}
                 />
-                <button 
+                <motion.button 
+                  whileHover={{ scale: 1.02, backgroundColor: "#000" }} whileTap={{ scale: 0.95 }}
                   onClick={handleFinish}
                   className="w-full text-center brutal-button-primary px-8 py-6 flex items-center justify-center group disabled:opacity-50"
                 >
-                  <span className="text-xl font-black uppercase tracking-wide">SUBMIT PREFERENCES</span>
-                </button>
+                  <span className="text-xl font-black uppercase tracking-wide text-white group-hover:text-white">SUBMIT PREFERENCES</span>
+                </motion.button>
               </>
             ) : (
               <>
-                <h2 className="text-4xl font-black uppercase tracking-tight mb-12 text-black">
+                <motion.h2 
+                  key={`q-${currentIndex}`}
+                  initial={{ opacity: 0, y: -10, filter: "blur(4px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ duration: 0.3 }}
+                  className="text-4xl font-black uppercase tracking-tight mb-12 text-black"
+                >
                   {questions[currentIndex].question || questions[currentIndex].title}
-                </h2>
-                <div className="flex flex-col gap-4">
+                </motion.h2>
+                <motion.div 
+                  key={`opts-${currentIndex}`}
+                  variants={{ show: { transition: { staggerChildren: 0.08 } } }} initial="hidden" animate="show"
+                  className="flex flex-col gap-4"
+                >
                   {questions[currentIndex].options.map((opt: string, i: number) => (
-                    <button 
+                    <motion.button 
                       key={i}
+                      variants={{ hidden: { opacity: 0, x: -30 }, show: { opacity: 1, x: 0, transition: { type: "spring", bounce: 0.4 } } }}
+                      whileHover={{ scale: 1.02, x: 10, backgroundColor: "var(--color-brutal-yellow)" }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => handleAnswer(opt)}
-                      className="w-full text-left brutal-button px-8 py-6 flex items-center justify-between group bg-white hover:bg-[var(--color-brutal-yellow)]"
+                      className="w-full text-left brutal-button px-8 py-6 flex items-center justify-between group bg-white border-4 border-black"
                     >
                       <span className="text-xl font-black text-black uppercase tracking-wide">{opt}</span>
                       <ChevronRight className="w-6 h-6 text-black group-hover:translate-x-2 transition-transform" />
-                    </button>
+                    </motion.button>
                   ))}
-                </div>
+                </motion.div>
               </>
             )}
           </BrutalCard>
@@ -243,13 +276,17 @@ const SyncScreen = ({ roomData, isHost, isGenerating, onGenerate }: { roomData: 
       exit={{ opacity: 0 }} 
       className="w-full flex flex-col items-center justify-center min-h-[60vh] text-center transition-transform duration-75"
     >
-      <div className="brutal-card bg-black text-white p-6 mb-12 transform -rotate-2 shadow-[8px_8px_0px_#FFD600]">
+      <motion.div 
+        animate={allResponded ? { rotate: -2, scale: [1, 1.05, 1] } : { rotate: [-2, 2, -2] }} 
+        transition={{ repeat: allResponded ? 0 : Infinity, duration: 0.3, ease: "linear" }}
+        className="brutal-card bg-black text-white p-6 mb-12 shadow-[8px_8px_0px_#FFD600]"
+      >
         <h2 className="text-5xl font-black uppercase tracking-tighter">
           {allResponded ? "ALL DATA SYNCED" : "CALCULATING"}
         </h2>
-      </div>
+      </motion.div>
       <div className="flex gap-4 items-center mb-16">
-        <div className="w-1.5 h-8 bg-black flex-shrink-0"></div>
+        <motion.div animate={{ height: [32, 16, 48, 32] }} transition={{ repeat: Infinity, duration: 0.5 }} className="w-1.5 bg-black flex-shrink-0"></motion.div>
         <p className="text-black font-black text-xl uppercase tracking-widest">
           {allResponded ? "READY TO GENERATE PLANS." : `AWAITING OTHERS (${responsesCount}/${totalCount}). MASH TO EXPEDITE.`}
         </p>
@@ -257,26 +294,32 @@ const SyncScreen = ({ roomData, isHost, isGenerating, onGenerate }: { roomData: 
       
       <div className="relative mb-12 flex flex-col items-center">
         {allResponded && isHost ? (
-          <button 
+          <motion.button 
+            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
             onClick={onGenerate}
             disabled={isGenerating}
             className="brutal-button-primary py-6 px-12 text-2xl font-black uppercase disabled:opacity-50"
           >
             {isGenerating ? "GENERATING..." : "GENERATE PLANS"}
-          </button>
+          </motion.button>
         ) : (
           <>
-            <button 
+            <motion.button 
+              whileTap={{ scale: 0.8, rotate: (Math.random() - 0.5) * 30 }}
               onClick={handleInteract}
               className="brutal-button bg-[var(--color-brutal-pink)] text-white w-56 h-56 flex items-center justify-center text-6xl active:bg-black transition-colors shadow-[12px_12px_0px_black] active:translate-y-2 active:translate-x-2 active:shadow-[0px_0px_0px_black]"
             >
               MASH
-            </button>
+            </motion.button>
             
-            <div className="mt-16 brutal-inset px-10 py-6 flex items-center gap-6 bg-white border-4 border-black text-black font-black text-4xl shadow-[8px_8px_0px_black]">
+            <motion.div 
+              key={mashes}
+              initial={{ scale: 1.5, color: "#FF00FF" }} animate={{ scale: 1, color: "#000" }} transition={{ duration: 0.2 }}
+              className="mt-16 brutal-inset px-10 py-6 flex items-center gap-6 bg-white border-4 border-black text-black font-black text-4xl shadow-[8px_8px_0px_black]"
+            >
               <span>{mashes}</span>
               <span className="text-[var(--color-brutal-pink)]">HITS</span>
-            </div>
+            </motion.div>
           </>
         )}
       </div>
@@ -316,12 +359,18 @@ const ProposalsScreen = ({ plans, onSubmitVotes, roomCode }: { plans: OutingPlan
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
+      <motion.div 
+        variants={{ show: { transition: { staggerChildren: 0.15 } } }} initial="hidden" animate="show"
+        className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12"
+      >
         {plans.map((plan) => {
           const isSelected = selectedIds.includes(plan.id);
           return (
             <BrutalCard 
               key={plan.id} 
+              variants={{ hidden: { opacity: 0, y: 30, rotate: -2 }, show: { opacity: 1, y: 0, rotate: 0, transition: { type: "spring", bounce: 0.4 } } }}
+              whileHover={{ scale: 1.02, rotate: 1 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => toggleVote(plan.id)}
               className={`relative overflow-hidden group flex flex-col h-full bg-white border-4 ${isSelected ? 'border-[var(--color-brutal-pink)] shadow-[8px_8px_0px_var(--color-brutal-pink)]' : 'border-black'}`}
             >
@@ -354,7 +403,7 @@ const ProposalsScreen = ({ plans, onSubmitVotes, roomCode }: { plans: OutingPlan
             </BrutalCard>
           );
         })}
-      </div>
+      </motion.div>
       
       {!submitted && (
         <div className="mt-16 flex justify-center">
@@ -390,12 +439,18 @@ const FinalPlansScreen = ({ finalPlans, revealed, onReveal }: { finalPlans: Fina
             <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-black uppercase">CONSENSUS<br/>REACHED</h2>
           </div>
 
-          <div className="w-full space-y-8">
+          <motion.div 
+            variants={{ show: { transition: { staggerChildren: 0.2 } } }} initial="hidden" animate="show"
+            className="w-full space-y-8"
+          >
             {finalPlans.map((plan, idx) => (
               <BrutalCard 
                 key={plan.id}
                 onClick={() => onReveal(true)} 
-                className={`${idx === 0 ? 'bg-[var(--color-brutal-yellow)]' : 'bg-white'} border-4 border-black flex flex-col md:flex-row gap-8 justify-between items-center cursor-pointer hover:translate-y-[-4px] transition-transform`}
+                variants={{ hidden: { opacity: 0, x: -50 }, show: { opacity: 1, x: 0, transition: { type: "spring", bounce: 0.3 } } }}
+                whileHover={{ scale: 1.02, x: 10 }}
+                whileTap={{ scale: 0.98 }}
+                className={`${idx === 0 ? 'bg-[var(--color-brutal-yellow)]' : 'bg-white'} border-4 border-black flex flex-col md:flex-row gap-8 justify-between items-center cursor-pointer`}
               >
                 <div className="flex gap-8 items-center w-full">
                   <div className="w-20 h-20 bg-white border-4 border-black flex items-center justify-center font-black text-4xl text-black shadow-[4px_4px_0px_black]">{idx + 1}</div>
@@ -414,7 +469,7 @@ const FinalPlansScreen = ({ finalPlans, revealed, onReveal }: { finalPlans: Fina
                 </div>
               </BrutalCard>
             ))}
-          </div>
+          </motion.div>
         </>
       ) : (
         <LockedPlanScreen plan={finalPlans[0]} />
